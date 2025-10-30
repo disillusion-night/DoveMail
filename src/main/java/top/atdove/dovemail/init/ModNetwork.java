@@ -269,9 +269,11 @@ public final class ModNetwork {
         if (recipient.online() != null) {
             var summaryPkt = new top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload(mail.toSummary());
             top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient.online(), summaryPkt);
-            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", target));
+            // 使用 UI 提示，便于在写信界面内联显示
+            sendUiAlert(sender, "message.dovemail.compose.sent", target);
         } else {
-            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", target));
+            // 使用 UI 提示，便于在写信界面内联显示
+            sendUiAlert(sender, "message.dovemail.compose.sent_offline", target);
         }
     }
 
@@ -411,10 +413,10 @@ public final class ModNetwork {
             var summaries = storage.getSummaries(player.getUUID());
             var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
-            // 反馈结果
-            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                "message.dovemail.delete_read.result", result.deleted(), result.skipped()
-            ));
+            // 反馈结果（改为 UI 提示，使其在邮箱界面底部显示）
+            sendUiAlert(player, "message.dovemail.delete_read.result",
+                Integer.toString(result.deleted()), Integer.toString(result.skipped())
+            );
         });
     }
 

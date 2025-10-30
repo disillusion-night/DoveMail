@@ -84,7 +84,7 @@ public class ComposeMailScreen extends Screen {
     String body = bodyArea.getValue().trim();
         if (!to.isEmpty() && !subject.isEmpty()) {
             DovemailNetwork.composeMail(to, subject, body, sendAsSystem, sendAsAnnouncement && sendAsSystem);
-            onClose();
+            // 不要立即关闭：等待服务器结果。若有错误，DovemailClientHooks 会将提示路由到本窗口底部信息栏。
         }
     }
 

@@ -54,8 +54,25 @@ public final class DovemailClientHooks {
                 ? Component.translatable(key)
                 : Component.translatable(key, args.toArray());
 
+        // 发送成功相关：若在写信界面，自动返回邮箱并在邮箱底部显示提示
+        boolean isComposeSuccess =
+                "message.dovemail.compose.sent".equals(key)
+                || "message.dovemail.compose.sent_offline".equals(key)
+                || "message.dovemail.compose.broadcast_result".equals(key);
+
         if (mc.screen instanceof top.atdove.dovemail.client.gui.ComposeMailScreen compose) {
-            compose.showInfoMessage(msg);
+            if (isComposeSuccess) {
+                // 主动关闭并返回父界面
+                compose.onClose();
+                if (mc.screen instanceof top.atdove.dovemail.client.gui.MailboxScreen mailbox) {
+                    mailbox.showInfoMessage(msg);
+                } else if (mc.gui != null) {
+                    mc.gui.setOverlayMessage(msg, false);
+                }
+            } else {
+                // 错误或其他提示：留在写信界面内联显示
+                compose.showInfoMessage(msg);
+            }
             return;
         }
         if (mc.screen instanceof top.atdove.dovemail.client.gui.MailboxScreen mailbox) {
