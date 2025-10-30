@@ -139,45 +139,63 @@ public final class ModNetwork {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
-            var level = player.serverLevel();
-            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
-                // Idempotent guard: if already claimed or no attachments, just refresh detail and exit
-                if (mail.isAttachmentsClaimed() || mail.getAttachments().isEmpty()) {
-                    // Feedback message
-                    if (mail.isAttachmentsClaimed()) {
-                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                                "message.dovemail.attachments.already_claimed"
-                        ));
-                    } else if (mail.getAttachments().isEmpty()) {
-                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                                "message.dovemail.attachments.none"
-                        ));
-                    }
-                    var detail0 = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
-                    top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail0);
-                    return;
-                }
-
-                var list = new java.util.ArrayList<>(mail.getAttachments());
-                for (var stack : list) {
-                    if (stack == null || stack.isEmpty()) continue;
-                    var toGive = stack.copy();
-                    if (!player.getInventory().add(toGive)) {
-                        player.drop(toGive, false);
-                    }
-                }
-                // Clear attachments to avoid double-claiming on repeated requests
-                mail.getAttachments().clear();
-                mail.markAttachmentsClaimed().markRead();
-                storage.setDirty();
-
-                var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
-                top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
-                var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
-                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
-            });
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
+            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail ->
+                handleClaimForMail(player, storage, mail)
+            );
         });
+    }
+
+    private static void handleClaimForMail(net.minecraft.server.level.ServerPlayer player,
+                                           top.atdove.dovemail.saveddata.MailStorage storage,
+                                           top.atdove.dovemail.mail.Mail mail) {
+        if (alreadyClaimedOrNone(mail)) {
+            sendAttachmentFeedback(player, mail);
+            sendMailDetail(player, mail.getId(), java.util.List.of());
+            return;
+        }
+        giveAllAttachmentsToPlayer(player, mail.getAttachments());
+        finalizeClaim(storage, mail);
+        sendMailDetail(player, mail.getId(), java.util.List.of());
+        sendMailSummary(player, mail);
+    }
+
+    private static boolean alreadyClaimedOrNone(top.atdove.dovemail.mail.Mail mail) {
+        return mail.isAttachmentsClaimed() || mail.getAttachments().isEmpty();
+    }
+
+    private static void sendAttachmentFeedback(net.minecraft.server.level.ServerPlayer player, top.atdove.dovemail.mail.Mail mail) {
+        if (mail.isAttachmentsClaimed()) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.attachments.already_claimed"));
+        } else if (mail.getAttachments().isEmpty()) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.attachments.none"));
+        }
+    }
+
+    private static void giveAllAttachmentsToPlayer(net.minecraft.server.level.ServerPlayer player, java.util.List<net.minecraft.world.item.ItemStack> attachments) {
+        for (var stack : new java.util.ArrayList<>(attachments)) {
+            if (stack == null || stack.isEmpty()) continue;
+            var toGive = stack.copy();
+            if (!player.getInventory().add(toGive)) {
+                player.drop(toGive, false);
+            }
+        }
+    }
+
+    private static void finalizeClaim(top.atdove.dovemail.saveddata.MailStorage storage, top.atdove.dovemail.mail.Mail mail) {
+        mail.getAttachments().clear();
+        mail.markAttachmentsClaimed().markRead();
+        storage.setDirty();
+    }
+
+    private static void sendMailDetail(net.minecraft.server.level.ServerPlayer player, java.util.UUID mailId, java.util.List<net.minecraft.world.item.ItemStack> attachments) {
+        var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mailId, attachments);
+        top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
+    }
+
+    private static void sendMailSummary(net.minecraft.server.level.ServerPlayer player, top.atdove.dovemail.mail.Mail mail) {
+        var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+        top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
     }
 
     private static void onServerComposeMail(top.atdove.dovemail.network.payload.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
@@ -188,64 +206,73 @@ public final class ModNetwork {
             boolean asSystem = payload.asSystem();
             boolean asAnnouncement = payload.asAnnouncement();
 
-            // 管理员群发：@a 在线所有玩家；* 所有已知玩家（含不在线）
-            if ("@a".equals(target)) {
-                handleBroadcastCompose(sender, payload.subject(), payload.body(), false, asSystem, asAnnouncement);
-                return;
-            }
-            if ("*".equals(target)) {
-                handleBroadcastCompose(sender, payload.subject(), payload.body(), true, asSystem, asAnnouncement);
+            if (isBroadcastTarget(target)) {
+                handleBroadcastCompose(sender, payload.subject(), payload.body(), isIncludeKnownOffline(target), asSystem, asAnnouncement);
                 return;
             }
 
-            var level = sender.serverLevel();
-            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-            var server = sender.server;
-
-            // 普通单人发送逻辑（支持离线但已知的玩家）
-            var maybeRecipient = resolveRecipient(server, storage, target);
-            if (maybeRecipient == null) {
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(sender.serverLevel());
+            var recipient = resolveRecipient(sender.server, storage, target);
+            if (recipient == null) {
                 sendUiAlert(sender, "message.dovemail.compose.recipient_not_found", target);
                 return;
             }
 
-            var mail = new top.atdove.dovemail.mail.Mail();
-            mail.setSubject(payload.subject())
-                .setBodyPlain(payload.body())
-                .setSenderName(sender.getGameProfile().getName())
-                .setTimestamp(System.currentTimeMillis())
-                .setRead(false)
-                .setAttachmentsClaimed(false);
-
-            // 权限与 System/公告设置：仅权限级别>=3 才能以 System 身份发送；公告仅在以 System 身份时生效
-            if (asSystem) {
-                if (sender.hasPermissions(3)) {
-                    mail.setSenderName("System");
-                    if (asAnnouncement) {
-                        mail.setAnnouncement(true);
-                    }
-                } else {
-                    sendUiAlert(sender, "message.dovemail.compose.no_permission");
-                }
-            }
-
-            // 将玩家附件容器中的物品作为邮件附件并清空容器
-            var attachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
-            if (!attachments.isEmpty()) {
-                mail.setAttachments(attachments);
-            }
-
-            storage.addOrUpdate(maybeRecipient.uuid(), mail);
-
-            if (maybeRecipient.online() != null) {
-                var summary = mail.toSummary();
-                var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(summary);
-                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(maybeRecipient.online(), summaryPkt);
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", target));
-            } else {
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", target));
-            }
+            var mail = createMailForCompose(sender, payload.subject(), payload.body(), asSystem, asAnnouncement);
+            attachAndConsumeIfAny(sender, mail);
+            storage.addOrUpdate(recipient.uuid(), mail);
+            notifyComposeResult(sender, target, recipient, mail);
         });
+    }
+
+    private static boolean isBroadcastTarget(String target) {
+        return "@a".equals(target) || "*".equals(target);
+    }
+
+    private static boolean isIncludeKnownOffline(String target) {
+        return "*".equals(target);
+    }
+
+    private static top.atdove.dovemail.mail.Mail createMailForCompose(net.minecraft.server.level.ServerPlayer sender,
+                                                                      String subject,
+                                                                      String body,
+                                                                      boolean asSystem,
+                                                                      boolean asAnnouncement) {
+        var mail = new top.atdove.dovemail.mail.Mail();
+        mail.setSubject(subject)
+            .setBodyPlain(body)
+            .setSenderName(sender.getGameProfile().getName())
+            .setTimestamp(System.currentTimeMillis())
+            .setRead(false)
+            .setAttachmentsClaimed(false);
+
+        if (asSystem) {
+            if (sender.hasPermissions(3)) {
+                mail.setSenderName("System");
+                if (asAnnouncement) mail.setAnnouncement(true);
+            } else {
+                sendUiAlert(sender, "message.dovemail.compose.no_permission");
+            }
+        }
+        return mail;
+    }
+
+    private static void attachAndConsumeIfAny(net.minecraft.server.level.ServerPlayer sender, top.atdove.dovemail.mail.Mail mail) {
+        var attachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
+        if (!attachments.isEmpty()) mail.setAttachments(attachments);
+    }
+
+    private static void notifyComposeResult(net.minecraft.server.level.ServerPlayer sender,
+                                            String target,
+                                            ResolvedRecipient recipient,
+                                            top.atdove.dovemail.mail.Mail mail) {
+        if (recipient.online() != null) {
+            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+            top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient.online(), summaryPkt);
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", target));
+        } else {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", target));
+        }
     }
 
     private static void handleBroadcastCompose(net.minecraft.server.level.ServerPlayer sender, String subject, String body, boolean includeKnownOffline, boolean asSystem, boolean asAnnouncement) {
@@ -253,57 +280,83 @@ public final class ModNetwork {
             sendUiAlert(sender, "message.dovemail.compose.no_permission");
             return;
         }
-        var level = sender.serverLevel();
-        var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-        var server = sender.server;
+        var storage = top.atdove.dovemail.saveddata.MailStorage.get(sender.serverLevel());
+        var makeMail = createMailSupplierForBroadcast(sender, subject, body, asSystem, asAnnouncement);
 
-        // 一次取出附件（从发送者的附件容器）；对每个收件人复制副本
-        var baseAttachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
-        java.util.function.Supplier<top.atdove.dovemail.mail.Mail> makeMail = () -> {
-            var m = new top.atdove.dovemail.mail.Mail();
-            m.setSubject(subject)
-             .setBodyPlain(body)
-             .setSenderName(sender.getGameProfile().getName())
-             .setTimestamp(System.currentTimeMillis())
-             .setRead(false)
-             .setAttachmentsClaimed(false);
-            if (asSystem) {
-                m.setSenderName("System");
-                if (asAnnouncement) m.setAnnouncement(true);
-            }
-            if (!baseAttachments.isEmpty()) {
-                var copy = new java.util.ArrayList<net.minecraft.world.item.ItemStack>(baseAttachments.size());
-                for (var st : baseAttachments) copy.add(st.copy());
-                m.setAttachments(copy);
-            }
-            return m;
-        };
-
-        int onlineCount = 0;
-        int offlineCount = 0;
-
-        var onlinePlayers = server.getPlayerList().getPlayers();
+        var onlinePlayers = sender.server.getPlayerList().getPlayers();
         var onlineSet = new java.util.HashSet<java.util.UUID>();
+        int onlineCount = distributeToOnline(storage, makeMail, onlinePlayers, onlineSet);
+        int offlineCount = includeKnownOffline ? distributeToOffline(storage, makeMail, onlineSet) : 0;
+
+        sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+            "message.dovemail.compose.broadcast_result", onlineCount + offlineCount, onlineCount, offlineCount
+        ));
+    }
+
+    private static java.util.function.Supplier<top.atdove.dovemail.mail.Mail> createMailSupplierForBroadcast(
+            net.minecraft.server.level.ServerPlayer sender,
+            String subject,
+            String body,
+            boolean asSystem,
+            boolean asAnnouncement) {
+        var baseAttachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
+        return () -> buildMailForBroadcast(sender, subject, body, asSystem, asAnnouncement, baseAttachments);
+    }
+
+    private static top.atdove.dovemail.mail.Mail buildMailForBroadcast(
+            net.minecraft.server.level.ServerPlayer sender,
+            String subject,
+            String body,
+            boolean asSystem,
+            boolean asAnnouncement,
+            java.util.List<net.minecraft.world.item.ItemStack> baseAttachments) {
+        var m = new top.atdove.dovemail.mail.Mail();
+        m.setSubject(subject)
+         .setBodyPlain(body)
+         .setSenderName(sender.getGameProfile().getName())
+         .setTimestamp(System.currentTimeMillis())
+         .setRead(false)
+         .setAttachmentsClaimed(false);
+        if (asSystem) {
+            m.setSenderName("System");
+            if (asAnnouncement) m.setAnnouncement(true);
+        }
+        if (!baseAttachments.isEmpty()) {
+            var copy = new java.util.ArrayList<net.minecraft.world.item.ItemStack>(baseAttachments.size());
+            for (var st : baseAttachments) copy.add(st.copy());
+            m.setAttachments(copy);
+        }
+        return m;
+    }
+
+    private static int distributeToOnline(
+            top.atdove.dovemail.saveddata.MailStorage storage,
+            java.util.function.Supplier<top.atdove.dovemail.mail.Mail> makeMail,
+            java.util.List<net.minecraft.server.level.ServerPlayer> onlinePlayers,
+            java.util.Set<java.util.UUID> onlineSet) {
+        int count = 0;
         for (var op : onlinePlayers) {
             onlineSet.add(op.getUUID());
             var mail = makeMail.get();
             storage.addOrUpdate(op.getUUID(), mail);
             var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
             top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(op, summaryPkt);
-            onlineCount++;
+            count++;
         }
+        return count;
+    }
 
-        if (includeKnownOffline) {
-            for (var uuid : storage.getKnownPlayers()) {
-                if (onlineSet.contains(uuid)) continue;
-                storage.addOrUpdate(uuid, makeMail.get());
-                offlineCount++;
-            }
+    private static int distributeToOffline(
+            top.atdove.dovemail.saveddata.MailStorage storage,
+            java.util.function.Supplier<top.atdove.dovemail.mail.Mail> makeMail,
+            java.util.Set<java.util.UUID> onlineSet) {
+        int count = 0;
+        for (var uuid : storage.getKnownPlayers()) {
+            if (onlineSet.contains(uuid)) continue;
+            storage.addOrUpdate(uuid, makeMail.get());
+            count++;
         }
-
-        sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                "message.dovemail.compose.broadcast_result", onlineCount + offlineCount, onlineCount, offlineCount
-        ));
+        return count;
     }
 
     private static void sendUiAlert(net.minecraft.server.level.ServerPlayer player, String key, String... args) {
