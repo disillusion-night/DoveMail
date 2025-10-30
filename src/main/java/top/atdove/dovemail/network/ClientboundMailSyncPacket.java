@@ -1,7 +1,6 @@
 package top.atdove.dovemail.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.ComponentSerialization;
 import top.atdove.dovemail.mail.MailSummary;
 
 import java.util.ArrayList;
