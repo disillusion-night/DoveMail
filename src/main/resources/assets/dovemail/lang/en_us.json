@@ -1,5 +1,13 @@
 {
   "itemGroup.dovemail": "Example Mod Tab",
   "block.dovemail.example_block": "Example Block",
-  "item.dovemail.example_item": "Example Item"
+  "item.dovemail.example_item": "Example Item",
+  "screen.dovemail.mailbox": "DoveMail Inbox",
+  "screen.dovemail.mailbox.empty": "Your inbox is empty.",
+  "screen.dovemail.mailbox.attachments": "Attachments available",
+  "screen.dovemail.mailbox.sender.unknown": "Unknown Sender",
+  "screen.dovemail.mail.detail": "Mail Detail",
+  "screen.dovemail.mail.attachments": "Attachments",
+  "button.dovemail.claim": "Claim All",
+  "screen.dovemail.mail.sender_prefix": "From: %s"
 }

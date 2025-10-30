@@ -4,33 +4,40 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import top.atdove.dovemail.mail.MailSummary;
+import top.atdove.dovemail.client.gui.widgets.MailCardRenderer;
+import top.atdove.dovemail.network.DovemailNetwork;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 简易邮件收件箱界面。
  */
 public class MailboxScreen extends Screen {
-    private static final int LIST_TOP_PADDING = 32;
-    private static final int ENTRY_HEIGHT = 24;
+    private static final int LIST_TOP_PADDING = 36;
+    private static final int CARD_HEIGHT = 42;
+    private static final int CARD_WIDTH = 260;
+    private static final int ICON_SIZE = 20;
+    private static final int PAGE_SIZE = 20;
 
     private final List<MailSummary> mailSummaries;
-    private int scrollOffset;
+    private int currentPage;
     private Button prevButton;
     private Button nextButton;
+    private MailCardRenderer cardRenderer;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
     public MailboxScreen(List<MailSummary> summaries) {
         super(Component.translatable("screen.dovemail.mailbox"));
         this.mailSummaries = new ArrayList<>(summaries != null ? summaries : Collections.emptyList());
+        this.mailSummaries.sort(Comparator.comparingLong(MailSummary::getTimestamp).reversed());
     }
 
     @Override
@@ -39,34 +46,30 @@ public class MailboxScreen extends Screen {
         int centerX = this.width / 2;
         int bottom = this.height - 28;
 
-        prevButton = Button.builder(Component.literal("<"), btn -> scroll(-1))
+        prevButton = Button.builder(Component.literal("<"), btn -> flipPage(-1))
                 .pos(centerX - 60, bottom)
                 .size(40, 20)
                 .build();
-        nextButton = Button.builder(Component.literal(">"), btn -> scroll(1))
+        nextButton = Button.builder(Component.literal(">"), btn -> flipPage(1))
                 .pos(centerX + 20, bottom)
                 .size(40, 20)
                 .build();
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
+    // 初始化卡片渲染器（依赖 font 和时间格式化器）
+    this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
         updateButtonStates();
     }
 
     private void updateButtonStates() {
-        int visible = visibleCount();
-        prevButton.active = scrollOffset > 0;
-        nextButton.active = mailSummaries.size() > scrollOffset + visible;
+        int totalPages = Math.max((mailSummaries.size() + PAGE_SIZE - 1) / PAGE_SIZE, 1);
+        prevButton.active = currentPage > 0;
+        nextButton.active = currentPage + 1 < totalPages;
     }
 
-    private int visibleCount() {
-        return Math.max((this.height - LIST_TOP_PADDING - 40) / ENTRY_HEIGHT, 1);
-    }
-
-    private void scroll(int direction) {
-        int visible = visibleCount();
-    int maxOffset = Math.max(mailSummaries.size() - visible, 0);
-    long newOffset = Math.clamp((long) scrollOffset + (long) direction * visible, 0L, (long) maxOffset);
-    scrollOffset = (int) newOffset;
+    private void flipPage(int direction) {
+        int totalPages = Math.max((mailSummaries.size() + PAGE_SIZE - 1) / PAGE_SIZE, 1);
+        currentPage = Mth.clamp(currentPage + direction, 0, Math.max(totalPages - 1, 0));
         updateButtonStates();
     }
 
@@ -77,40 +80,49 @@ public class MailboxScreen extends Screen {
 
         guiGraphics.drawCenteredString(font, this.title, this.width / 2, 12, 0xFFFFFF);
 
-        int visible = visibleCount();
-        int start = scrollOffset;
-        int end = Math.min(start + visible, mailSummaries.size());
+        int startIndex = currentPage * PAGE_SIZE;
+        int endIndex = Math.min(startIndex + PAGE_SIZE, mailSummaries.size());
         int y = LIST_TOP_PADDING;
-        for (int i = start; i < end; i++) {
+        for (int i = startIndex; i < endIndex; i++) {
             MailSummary summary = mailSummaries.get(i);
-            renderEntry(guiGraphics, summary, y);
-            y += ENTRY_HEIGHT;
+            cardRenderer.renderEntry(guiGraphics, this.width / 2, y, summary, i, mouseX, mouseY);
+            y += CARD_HEIGHT + 4;
         }
         if (mailSummaries.isEmpty()) {
             guiGraphics.drawCenteredString(font, Component.translatable("screen.dovemail.mailbox.empty"), this.width / 2, this.height / 2 - 10, 0xAAAAAA);
         }
+        renderPageIndicator(guiGraphics);
     }
 
-    private void renderEntry(GuiGraphics guiGraphics, MailSummary summary, int y) {
-        int left = this.width / 2 - 110;
-        int right = this.width / 2 + 110;
-        int top = y;
-        int bottom = y + ENTRY_HEIGHT - 4;
-
-        int backgroundColor = summary.isRead() ? 0x44000000 : 0x88000000;
-        guiGraphics.fill(left, top, right, bottom, backgroundColor);
-
-        Component subject = Component.literal(summary.getSubject());
-        guiGraphics.drawString(font, subject, left + 6, top + 6, 0xFFFFFF, false);
-
-        String timeText = timeFormatter.format(Instant.ofEpochMilli(summary.getTimestamp()));
-        guiGraphics.drawString(font, timeText, right - font.width(timeText) - 6, top + 6, 0xCCCCCC, false);
-
-        if (!summary.isAttachmentsClaimed()) {
-            Component attachments = Component.translatable("screen.dovemail.mailbox.attachments");
-            guiGraphics.drawString(font, attachments, left + 6, top + 14, 0xFFD700, false);
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 计算当前页卡片矩形，命中后打开详情界面
+        int startIndex = currentPage * PAGE_SIZE;
+        int endIndex = Math.min(startIndex + PAGE_SIZE, mailSummaries.size());
+        int y = LIST_TOP_PADDING;
+        int centerX = this.width / 2;
+        int left = centerX - CARD_WIDTH / 2;
+        int right = centerX + CARD_WIDTH / 2;
+        for (int i = startIndex; i < endIndex; i++) {
+            int top = y;
+            int bottom = top + CARD_HEIGHT;
+            if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom) {
+                MailSummary summary = mailSummaries.get(i);
+                this.minecraft.setScreen(new MailDetailScreen(summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
+                return true;
+            }
+            y += CARD_HEIGHT + 4;
         }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
+
+    private void renderPageIndicator(GuiGraphics guiGraphics) {
+        int totalPages = Math.max((mailSummaries.size() + PAGE_SIZE - 1) / PAGE_SIZE, 1);
+        Component indicator = Component.literal((currentPage + 1) + "/" + totalPages);
+        guiGraphics.drawCenteredString(font, indicator, this.width / 2, this.height - 44, 0xFFFFFF);
+    }
+
+    
 
     public static class Builder {
         private final List<MailSummary> mails = new ArrayList<>();
@@ -119,11 +131,6 @@ public class MailboxScreen extends Screen {
             if (summary != null) {
                 mails.add(summary);
             }
-            return this;
-        }
-
-        public Builder addMail(UUID id, String subject, String bodyJson, long timestamp, boolean read, boolean attachmentsClaimed) {
-            mails.add(new MailSummary(id, subject, bodyJson, timestamp, read, attachmentsClaimed));
             return this;
         }
 

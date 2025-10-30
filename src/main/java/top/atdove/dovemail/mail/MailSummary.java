@@ -1,26 +1,19 @@
 package top.atdove.dovemail.mail;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
+import com.mojang.serialization.JsonOps;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+
 import java.util.UUID;
 
 /**
  * 客户端用于渲染的精简邮件数据。
  */
-public class MailSummary {
-    private final UUID id;
-    private final String subject;
-    private final String bodyJson;
-    private final long timestamp;
-    private final boolean read;
-    private final boolean attachmentsClaimed;
-
-    public MailSummary(UUID id, String subject, String bodyJson, long timestamp, boolean read, boolean attachmentsClaimed) {
-        this.id = id;
-        this.subject = subject;
-        this.bodyJson = bodyJson;
-        this.timestamp = timestamp;
-        this.read = read;
-        this.attachmentsClaimed = attachmentsClaimed;
-    }
+public record MailSummary(UUID id, String subject, String bodyJson, String senderName, long timestamp,
+                          boolean read, boolean attachmentsClaimed, boolean hasAttachments) {
 
     public UUID getId() {
         return id;
@@ -34,6 +27,10 @@ public class MailSummary {
         return bodyJson;
     }
 
+    public String getSenderName() {
+        return senderName;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
@@ -44,5 +41,17 @@ public class MailSummary {
 
     public boolean isAttachmentsClaimed() {
         return attachmentsClaimed;
+    }
+
+    public Component bodyComponent() {
+        if (bodyJson == null || bodyJson.isEmpty()) {
+            return Component.empty();
+        }
+        try {
+            JsonElement json = JsonParser.parseString(bodyJson);
+            return ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, json).result().orElse(Component.literal(bodyJson));
+        } catch (JsonSyntaxException | IllegalStateException ex) {
+            return Component.literal(bodyJson);
+        }
     }
 }

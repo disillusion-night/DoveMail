@@ -254,7 +254,7 @@ public class Mail {
     }
 
     public MailSummary toSummary() {
-        return new MailSummary(id, subject, bodyJson, timestamp, read, attachmentsClaimed);
+        return new MailSummary(id, subject, bodyJson, senderName, timestamp, read, attachmentsClaimed, !attachments.isEmpty());
     }
 
     public static String plainTextToJsonComponent(String text) {

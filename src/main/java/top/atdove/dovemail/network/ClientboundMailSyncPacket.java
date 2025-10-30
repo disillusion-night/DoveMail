@@ -28,10 +28,12 @@ public class ClientboundMailSyncPacket {
             UUID id = buf.readUUID();
             String subject = buf.readUtf(32767);
             String bodyJson = buf.readUtf(32767);
+            String senderName = buf.readUtf(32767);
             long timestamp = buf.readLong();
             boolean read = buf.readBoolean();
             boolean attachmentsClaimed = buf.readBoolean();
-            list.add(new MailSummary(id, subject, bodyJson, timestamp, read, attachmentsClaimed));
+            boolean hasAttachments = buf.readBoolean();
+            list.add(new MailSummary(id, subject, bodyJson, senderName, timestamp, read, attachmentsClaimed, hasAttachments));
         }
         return new ClientboundMailSyncPacket(list);
     }
@@ -42,9 +44,11 @@ public class ClientboundMailSyncPacket {
             buf.writeUUID(summary.getId());
             buf.writeUtf(summary.getSubject());
             buf.writeUtf(summary.getBodyJson());
+            buf.writeUtf(summary.getSenderName() == null ? "" : summary.getSenderName());
             buf.writeLong(summary.getTimestamp());
             buf.writeBoolean(summary.isRead());
             buf.writeBoolean(summary.isAttachmentsClaimed());
+            buf.writeBoolean(summary.hasAttachments());
         }
     }
 }
