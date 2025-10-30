@@ -44,7 +44,6 @@ public class ComposeSettingsScreen extends Screen {
                     sendAsSystem = value;
                     if (!sendAsSystem) {
                         sendAsAnnouncement = false;
-                        if (announcementCheckbox != null) announcementCheckbox.setSelected(false);
                     }
                     updateAnnouncementEnabled();
                 })
