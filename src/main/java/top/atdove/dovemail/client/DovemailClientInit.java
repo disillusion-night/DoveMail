@@ -12,11 +12,12 @@ public final class DovemailClientInit {
     private DovemailClientInit() {}
 
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
-        openMailboxKey = new KeyMapping(
-                "key.dovemail.open_mailbox",
-                InputConstants.KEY_M,
-                "key.categories.dovemail"
-        );
+    openMailboxKey = new KeyMapping(
+        "key.dovemail.open_mailbox",
+        InputConstants.Type.KEYSYM,
+        -1,
+        "key.categories.dovemail"
+    );
         event.register(openMailboxKey);
     }
 
