@@ -26,65 +26,65 @@ public final class ModNetwork {
 
         // Clientbound
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload.STREAM_CODEC,
         ModNetwork::onClientMailSummary
     );
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload.STREAM_CODEC,
         ModNetwork::onClientMailDetail
     );
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload.STREAM_CODEC,
         ModNetwork::onClientOpenMailbox
     );
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundUnreadHintPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundUnreadHintPayload.STREAM_CODEC,
         ModNetwork::onClientUnreadHint
     );
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundUiAlertPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundUiAlertPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundUiAlertPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundUiAlertPayload.STREAM_CODEC,
         ModNetwork::onClientUiAlert
     );
     registrar.playToClient(
-        top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.client.ClientboundOpenMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundOpenMailDetailPayload.STREAM_CODEC,
         ModNetwork::onClientOpenMailDetail
     );
 
         // Serverbound
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundRequestMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundRequestMailDetailPayload.STREAM_CODEC,
         ModNetwork::onServerRequestMailDetail
     );
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundClaimAttachmentsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundClaimAttachmentsPayload.STREAM_CODEC,
         ModNetwork::onServerClaimAttachments
     );
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundComposeMailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundComposeMailPayload.STREAM_CODEC,
         ModNetwork::onServerComposeMail
     );
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundOpenMailboxPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundOpenMailboxPayload.STREAM_CODEC,
         ModNetwork::onServerOpenMailbox
     );
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundDeleteReadMailsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundDeleteReadMailsPayload.STREAM_CODEC,
         ModNetwork::onServerDeleteReadMails
     );
     registrar.playToServer(
-        top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload.PACKET_TYPE,
-        top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload.STREAM_CODEC,
+        top.atdove.dovemail.network.payload.server.ServerboundOpenAttachmentsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.server.ServerboundOpenAttachmentsPayload.STREAM_CODEC,
         ModNetwork::onServerOpenAttachments
     );
 
@@ -92,31 +92,31 @@ public final class ModNetwork {
     }
 
     // region Handlers
-    private static void onClientMailSummary(top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload payload, IPayloadContext ctx) {
+    private static void onClientMailSummary(top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleMailSummary(payload));
     }
 
-    private static void onClientMailDetail(top.atdove.dovemail.network.payload.ClientboundMailDetailPayload payload, IPayloadContext ctx) {
+    private static void onClientMailDetail(top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleMailDetail(payload));
     }
 
-    private static void onClientOpenMailbox(top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload payload, IPayloadContext ctx) {
+    private static void onClientOpenMailbox(top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleOpenMailbox(payload));
     }
 
-    private static void onClientUnreadHint(top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload payload, IPayloadContext ctx) {
+    private static void onClientUnreadHint(top.atdove.dovemail.network.payload.client.ClientboundUnreadHintPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleUnreadHint(payload.count()));
     }
 
-    private static void onClientOpenMailDetail(top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload payload, IPayloadContext ctx) {
+    private static void onClientOpenMailDetail(top.atdove.dovemail.network.payload.client.ClientboundOpenMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onOpenMailDetail(payload.summary(), payload.attachments()));
     }
 
-    private static void onClientUiAlert(top.atdove.dovemail.network.payload.ClientboundUiAlertPayload payload, IPayloadContext ctx) {
+    private static void onClientUiAlert(top.atdove.dovemail.network.payload.client.ClientboundUiAlertPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onUiAlert(payload.key(), payload.args()));
     }
 
-    private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
+    private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.server.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
@@ -126,16 +126,16 @@ public final class ModNetwork {
                 if (!mail.isRead()) {
                     mail.markRead();
                     storage.setDirty();
-                    var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+                    var sumPkt = new top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload(mail.toSummary());
                     top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
                 }
-                var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
+                var pkt = new top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
             });
         });
     }
 
-    private static void onServerClaimAttachments(top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload payload, IPayloadContext ctx) {
+    private static void onServerClaimAttachments(top.atdove.dovemail.network.payload.server.ServerboundClaimAttachmentsPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
@@ -189,16 +189,16 @@ public final class ModNetwork {
     }
 
     private static void sendMailDetail(net.minecraft.server.level.ServerPlayer player, java.util.UUID mailId, java.util.List<net.minecraft.world.item.ItemStack> attachments) {
-        var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mailId, attachments);
+        var pkt = new top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload(mailId, attachments);
         top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
     }
 
     private static void sendMailSummary(net.minecraft.server.level.ServerPlayer player, top.atdove.dovemail.mail.Mail mail) {
-        var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+        var sumPkt = new top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload(mail.toSummary());
         top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
     }
 
-    private static void onServerComposeMail(top.atdove.dovemail.network.payload.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
+    private static void onServerComposeMail(top.atdove.dovemail.network.payload.server.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer sender)) return;
@@ -267,7 +267,7 @@ public final class ModNetwork {
                                             ResolvedRecipient recipient,
                                             top.atdove.dovemail.mail.Mail mail) {
         if (recipient.online() != null) {
-            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+            var summaryPkt = new top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload(mail.toSummary());
             top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient.online(), summaryPkt);
             sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", target));
         } else {
@@ -339,7 +339,7 @@ public final class ModNetwork {
             onlineSet.add(op.getUUID());
             var mail = makeMail.get();
             storage.addOrUpdate(op.getUUID(), mail);
-            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+            var summaryPkt = new top.atdove.dovemail.network.payload.client.ClientboundMailSummaryPayload(mail.toSummary());
             top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(op, summaryPkt);
             count++;
         }
@@ -361,7 +361,7 @@ public final class ModNetwork {
 
     private static void sendUiAlert(net.minecraft.server.level.ServerPlayer player, String key, String... args) {
         java.util.List<String> list = java.util.Arrays.asList(args);
-        var pkt = new top.atdove.dovemail.network.payload.ClientboundUiAlertPayload(key, list);
+        var pkt = new top.atdove.dovemail.network.payload.client.ClientboundUiAlertPayload(key, list);
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
     }
 
@@ -390,18 +390,18 @@ public final class ModNetwork {
     }
 
     @SuppressWarnings("unused")
-    private static void onServerOpenMailbox(top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload payload, IPayloadContext ctx) {
+    private static void onServerOpenMailbox(top.atdove.dovemail.network.payload.server.ServerboundOpenMailboxPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
             var summaries = storage.getSummaries(player.getUUID());
-            var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+            var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
         });
     }
 
-    private static void onServerDeleteReadMails(top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload payload, IPayloadContext ctx) {
+    private static void onServerDeleteReadMails(top.atdove.dovemail.network.payload.server.ServerboundDeleteReadMailsPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
@@ -409,7 +409,7 @@ public final class ModNetwork {
             // 刷新邮箱摘要
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
             var summaries = storage.getSummaries(player.getUUID());
-            var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+            var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
             // 反馈结果
             player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
@@ -438,7 +438,7 @@ public final class ModNetwork {
     }
     // endregion
 
-    private static void onServerOpenAttachments(top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload payload, IPayloadContext ctx) {
+    private static void onServerOpenAttachments(top.atdove.dovemail.network.payload.server.ServerboundOpenAttachmentsPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;

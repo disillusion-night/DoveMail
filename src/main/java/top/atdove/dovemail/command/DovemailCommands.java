@@ -19,7 +19,7 @@ public final class DovemailCommands {
                     if (src.getEntity() instanceof ServerPlayer player) {
                         var storage = MailStorage.get(player.serverLevel());
                         var summaries = storage.getSummaries(player.getUUID());
-                        var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+                        var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
                         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
                         return 1;
                     }

@@ -33,7 +33,7 @@ public final class DovemailTestCommands {
             if (src.getEntity() instanceof ServerPlayer player) {
                 var storage = MailStorage.get(player.serverLevel());
                 var summaries = storage.getSummaries(player.getUUID());
-                var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+                var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
                 return 1;
             }
@@ -90,7 +90,7 @@ public final class DovemailTestCommands {
 
         // 打开收件箱
         var summaries = storage.getSummaries(player.getUUID());
-        var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+    var pkt = new top.atdove.dovemail.network.payload.client.ClientboundOpenMailboxPayload(summaries);
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
         return 1;
     }
