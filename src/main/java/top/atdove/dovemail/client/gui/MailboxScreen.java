@@ -152,7 +152,7 @@ public class MailboxScreen extends Screen {
             int bottom = top + CARD_HEIGHT;
             if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom) {
                 MailSummary summary = mailSummaries.get(i);
-                if (this.minecraft != null) this.minecraft.setScreen(new MailDetailScreen(summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
+                if (this.minecraft != null) this.minecraft.setScreen(new MailDetailScreen(this, summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
                 return true;
             }
             y += CARD_HEIGHT + 4;

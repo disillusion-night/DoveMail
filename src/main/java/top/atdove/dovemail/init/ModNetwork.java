@@ -55,6 +55,11 @@ public final class ModNetwork {
         top.atdove.dovemail.network.payload.client.ClientboundOpenMailDetailPayload.STREAM_CODEC,
         ModNetwork::onClientOpenMailDetail
     );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.client.ClientboundRefreshMailboxPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.client.ClientboundRefreshMailboxPayload.STREAM_CODEC,
+        ModNetwork::onClientRefreshMailbox
+    );
 
         // Serverbound
     registrar.playToServer(
@@ -116,6 +121,10 @@ public final class ModNetwork {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onUiAlert(payload.key(), payload.args()));
     }
 
+    private static void onClientRefreshMailbox(top.atdove.dovemail.network.payload.client.ClientboundRefreshMailboxPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onRefreshMailbox());
+    }
+
     private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.server.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
@@ -131,6 +140,9 @@ public final class ModNetwork {
                 }
                 var pkt = new top.atdove.dovemail.network.payload.client.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
+                // 若玩家当前正在邮箱界面，提示其刷新（客户端会自行判断并请求全量刷新）
+                var refresh = new top.atdove.dovemail.network.payload.client.ClientboundRefreshMailboxPayload();
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, refresh);
             });
         });
     }

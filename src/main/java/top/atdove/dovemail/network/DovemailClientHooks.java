@@ -38,7 +38,12 @@ public final class DovemailClientHooks {
 
     public static void onOpenMailDetail(MailSummary summary, java.util.List<ItemStack> attachments) {
         var mc = Minecraft.getInstance();
-        mc.setScreen(new MailDetailScreen(summary, attachments, s -> DovemailNetwork.claimAttachments(s.getId())));
+        // 若当前在收件箱，则把收件箱作为父界面传入；否则视作公告弹出，不带父界面
+        if (mc.screen instanceof MailboxScreen mailbox) {
+            mc.setScreen(new MailDetailScreen(mailbox, summary, attachments, s -> DovemailNetwork.claimAttachments(s.getId())));
+        } else {
+            mc.setScreen(new MailDetailScreen(summary, attachments, s -> DovemailNetwork.claimAttachments(s.getId())));
+        }
     }
 
     public static void onUnreadHint(int count) {
@@ -86,6 +91,14 @@ public final class DovemailClientHooks {
         // 兜底：不在收/发件界面时，使用覆盖消息以保证用户可见
         if (mc.gui != null) {
             mc.gui.setOverlayMessage(msg, false);
+        }
+    }
+
+    public static void onRefreshMailbox() {
+        var mc = Minecraft.getInstance();
+        if (mc.screen instanceof MailboxScreen) {
+            // 主动请求全量刷新
+            DovemailNetwork.openMailbox();
         }
     }
 }

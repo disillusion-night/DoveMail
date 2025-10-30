@@ -24,6 +24,7 @@ public class MailDetailScreen extends Screen {
     private static final int ATTACHMENT_GAP = 6;
 
     private final MailSummary summary;
+    private final Screen parent; // 若从收件箱进入则保存父界面；公告弹出则为 null
     private final List<ItemStack> attachments;
     private final Consumer<MailSummary> claimAction; // 回调由外部注入：负责发包并在服务端标记与发放
 
@@ -31,11 +32,16 @@ public class MailDetailScreen extends Screen {
     private int scrollY = 0;
     private int maxScrollY = 0;
 
-    public MailDetailScreen(MailSummary summary, List<ItemStack> attachments, Consumer<MailSummary> claimAction) {
+    public MailDetailScreen(Screen parent, MailSummary summary, List<ItemStack> attachments, Consumer<MailSummary> claimAction) {
         super(Component.translatable("screen.dovemail.mail.detail"));
+        this.parent = parent;
         this.summary = summary;
         this.attachments = attachments != null ? new ArrayList<>(attachments) : new ArrayList<>();
         this.claimAction = claimAction;
+    }
+
+    public MailDetailScreen(MailSummary summary, List<ItemStack> attachments, Consumer<MailSummary> claimAction) {
+        this(null, summary, attachments, claimAction);
     }
 
     @Override
@@ -60,6 +66,17 @@ public class MailDetailScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public void onClose() {
+        if (this.minecraft != null) {
+            if (this.parent != null) {
+                this.minecraft.setScreen(this.parent); // 从收件箱进入：返回收件箱
+            } else {
+                this.minecraft.setScreen(null); // 公告弹出：关闭界面
+            }
+        }
     }
 
     @Override

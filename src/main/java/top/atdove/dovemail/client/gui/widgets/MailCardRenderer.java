@@ -73,9 +73,22 @@ public class MailCardRenderer {
         String senderLine = font.plainSubstrByWidth(senderName, textWidth);
         g.drawString(font, Component.literal(senderLine), textLeft, top + 16, 0xB0E0FF, false);
 
+        // Body 仅显示第一行，且无论是有换行还是超出宽度都以省略号结尾
         Component bodyComponent = summary.bodyComponent();
-        String bodyLine = font.plainSubstrByWidth(bodyComponent.getString(), textWidth);
-        g.drawString(font, Component.literal(bodyLine), textLeft, top + 26, 0xDDDDDD, false);
+        String full = bodyComponent.getString();
+        int nl = full.indexOf('\n');
+        String firstLine = nl >= 0 ? full.substring(0, nl) : full;
+        boolean needEllipsis = nl >= 0; // 原文有多行时必带省略号
+        int ellipsisWidth = font.width("...");
+        String display;
+        if (font.width(firstLine) > textWidth) {
+            int max = Math.max(0, textWidth - ellipsisWidth);
+            String cut = font.plainSubstrByWidth(firstLine, max);
+            display = cut + "...";
+        } else {
+            display = firstLine + (needEllipsis ? "..." : "");
+        }
+        g.drawString(font, Component.literal(display), textLeft, top + 26, 0xDDDDDD, false);
 
         if (summary.hasAttachments() && !summary.isAttachmentsClaimed()) {
             Component attachments = Component.translatable("screen.dovemail.mailbox.attachments");

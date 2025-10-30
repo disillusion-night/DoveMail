@@ -21,7 +21,8 @@ public class MultiLineTextArea extends AbstractWidget {
     // Soft-wrap layout cache
     private java.util.List<VisualLine> layout = java.util.Collections.emptyList();
     private int layoutForWidth = -1; // cache key
-    private int layoutForValueHash = -1; // cache key
+    private int layoutForVersion = -1; // cache key for content version
+    private int contentVersion = 0; // increments whenever text content changes
 
     private static final int H_PADDING = 4; // left/right padding for text
 
@@ -46,7 +47,7 @@ public class MultiLineTextArea extends AbstractWidget {
         if (text != null) value.append(text);
         cursor = Math.min(cursor, value.length());
         ensureCursorVisible();
-        invalidateLayout();
+        contentVersion++;
     }
 
     public void append(String text) {
@@ -56,7 +57,7 @@ public class MultiLineTextArea extends AbstractWidget {
         value.insert(pos, text);
         cursor = pos + text.length();
         ensureCursorVisible();
-        invalidateLayout();
+        contentVersion++;
     }
 
     private int lineCount() { ensureLayout(); return layout.size(); }
@@ -294,6 +295,7 @@ public class MultiLineTextArea extends AbstractWidget {
         cursor = a;
         clearSelection();
         ensureCursorVisible();
+        contentVersion++;
     }
     private void replaceSelectionIfAny() { if (hasSelection()) deleteSelection(); }
     private void copySelection() {
@@ -344,6 +346,7 @@ public class MultiLineTextArea extends AbstractWidget {
             value.deleteCharAt(cursor - 1);
             cursor--;
             ensureCursorVisible();
+            contentVersion++;
         }
     }
 
@@ -353,6 +356,7 @@ public class MultiLineTextArea extends AbstractWidget {
         if (cursor < value.length() && cursor >= 0) {
             value.deleteCharAt(cursor);
             ensureCursorVisible();
+            contentVersion++;
         }
     }
 
@@ -392,7 +396,6 @@ public class MultiLineTextArea extends AbstractWidget {
     }
 
     // Soft-wrap layout helpers
-    private void invalidateLayout() { layoutForWidth = -1; layoutForValueHash = -1; layout = java.util.Collections.emptyList(); }
 
     private void clampCursor() {
         cursor = Mth.clamp(cursor, 0, value.length());
@@ -406,10 +409,9 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private void ensureLayout() {
         int available = Math.max(1, this.width - H_PADDING * 2);
-        int valHash = value.hashCode();
-        if (available == layoutForWidth && valHash == layoutForValueHash && !layout.isEmpty()) return;
+        if (available == layoutForWidth && contentVersion == layoutForVersion && !layout.isEmpty()) return;
         layoutForWidth = available;
-        layoutForValueHash = valHash;
+        layoutForVersion = contentVersion;
         layout = new java.util.ArrayList<>();
         int i = 0;
         while (i < value.length()) {
@@ -451,9 +453,9 @@ public class MultiLineTextArea extends AbstractWidget {
     }
 
     private int normalizeIndexForLayout(int idx) {
-        int clamped = Mth.clamp(idx, 0, value.length());
-        if (clamped > 0 && clamped <= value.length() && value.charAt(clamped - 1) == '\n') return clamped - 1;
-        return clamped;
+        // 不向前折返到换行符前一列：当光标位于换行后（idx 位于 '\n' 之后），
+        // 应该定位到下一可见行的列 0，而不是上一行的末尾，避免“换行后光标跳到上一行末尾”的错觉。
+        return Mth.clamp(idx, 0, value.length());
     }
 
     private int getVisualLineOfIndex(int idx) {
