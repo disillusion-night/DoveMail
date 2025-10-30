@@ -35,6 +35,11 @@ public final class ModNetwork {
                 top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.STREAM_CODEC,
                 (payload, ctx) -> onClientMailDetail(payload, ctx)
         );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.STREAM_CODEC,
+        (payload, ctx) -> onClientOpenMailbox(payload, ctx)
+    );
 
         // Serverbound
         registrar.playToServer(
@@ -47,6 +52,11 @@ public final class ModNetwork {
                 top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.STREAM_CODEC,
                 (payload, ctx) -> onServerClaimAttachments(payload, ctx)
         );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.STREAM_CODEC,
+        (payload, ctx) -> onServerComposeMail(payload, ctx)
+    );
 
         LOGGER.debug("[DoveMail] Payload registrar initialized and payloads registered");
     }
@@ -58,6 +68,10 @@ public final class ModNetwork {
 
     private static void onClientMailDetail(top.atdove.dovemail.network.payload.ClientboundMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleMailDetail(payload));
+    }
+
+    private static void onClientOpenMailbox(top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleOpenMailbox(payload));
     }
 
     private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
@@ -95,6 +109,39 @@ public final class ModNetwork {
                 var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
             });
+        });
+    }
+
+    private static void onServerComposeMail(top.atdove.dovemail.network.payload.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer sender)) return;
+            var level = sender.serverLevel();
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
+
+            var server = sender.server;
+            var recipient = server.getPlayerList().getPlayerByName(payload.recipientName());
+            if (recipient == null) {
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.target_offline", payload.recipientName()));
+                return;
+            }
+
+        var mail = new top.atdove.dovemail.mail.Mail();
+        mail.setSubject(payload.subject())
+            .setBodyPlain(payload.body())
+                    .setSenderName(sender.getGameProfile().getName())
+                    .setTimestamp(System.currentTimeMillis())
+                    .setRead(false)
+                    .setAttachmentsClaimed(false);
+
+            storage.addOrUpdate(recipient.getUUID(), mail);
+
+            // 可选：下发一条摘要给收件人，便于其已打开邮箱时刷新
+            var summary = mail.toSummary();
+            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(summary);
+            top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient, summaryPkt);
+
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", payload.recipientName()));
         });
     }
     // endregion

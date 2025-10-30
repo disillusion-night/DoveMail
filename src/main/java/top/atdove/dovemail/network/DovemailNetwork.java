@@ -31,6 +31,13 @@ public final class DovemailNetwork {
         );
         LOGGER.debug("[DoveMail] claimAttachments: {}", mailId);
     }
+
+    public static void composeMail(String recipientName, String subject, String body) {
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                new top.atdove.dovemail.network.payload.ServerboundComposeMailPayload(recipientName, subject, body)
+        );
+        LOGGER.debug("[DoveMail] composeMail to={} subject={}", recipientName, subject);
+    }
     // endregion
 
     // region Server -> Client callbacks (client execution)
@@ -42,6 +49,10 @@ public final class DovemailNetwork {
         // 目前暂无收件箱即时刷新逻辑，这里先留日志/占位（将来可用于增量更新列表）
         LOGGER.debug("[DoveMail] handleMailSummary client recv id={} subject={}",
                 payload.summary().getId(), payload.summary().getSubject());
+    }
+
+    public static void handleOpenMailbox(top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload payload) {
+        DovemailClientHooks.onOpenMailbox(payload.summaries());
     }
     // endregion
 

@@ -3,6 +3,8 @@ package top.atdove.dovemail.network;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import top.atdove.dovemail.client.gui.MailDetailScreen;
+import top.atdove.dovemail.client.gui.MailboxScreen;
+import top.atdove.dovemail.mail.MailSummary;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,5 +19,10 @@ public final class DovemailClientHooks {
                 screen.setAttachments(attachments);
             }
         }
+    }
+
+    public static void onOpenMailbox(List<MailSummary> summaries) {
+        var mc = Minecraft.getInstance();
+        mc.setScreen(new MailboxScreen.Builder().fromMails(summaries).build());
     }
 }

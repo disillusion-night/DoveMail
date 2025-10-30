@@ -56,6 +56,11 @@ public class MailboxScreen extends Screen {
                 .build();
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
+    // Compose button at top-right of the list
+    Button compose = Button.builder(Component.translatable("screen.dovemail.compose"), btn ->
+        this.minecraft.setScreen(new ComposeMailScreen(this))
+    ).pos(centerX + CARD_WIDTH / 2 - 70, 10).size(70, 20).build();
+    addRenderableWidget(compose);
     // 初始化卡片渲染器（依赖 font 和时间格式化器）
     this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
         updateButtonStates();
