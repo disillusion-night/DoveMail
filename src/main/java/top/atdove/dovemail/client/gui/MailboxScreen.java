@@ -19,6 +19,7 @@ import java.util.List;
  * 简易邮件收件箱界面。
  */
 public class MailboxScreen extends Screen {
+    private static final String SYSTEM_SENDER = "System";
     private static final int LIST_TOP_PADDING = 50;
     private static final int CARD_HEIGHT = 42;
     private static final int CARD_WIDTH = 260;
@@ -37,8 +38,8 @@ public class MailboxScreen extends Screen {
         super(Component.translatable("screen.dovemail.mailbox"));
         this.mailSummaries = new ArrayList<>(summaries != null ? summaries : Collections.emptyList());
         this.mailSummaries.sort((a, b) -> {
-            boolean aSysUnread = !a.read() && "System".equals(a.getSenderName());
-            boolean bSysUnread = !b.read() && "System".equals(b.getSenderName());
+            boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
+            boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
             if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });
@@ -201,8 +202,8 @@ public class MailboxScreen extends Screen {
         }
         // 重新排序、更新分页按钮（未读 System 优先，其次按时间倒序）
         mailSummaries.sort((a, b) -> {
-            boolean aSysUnread = !a.read() && "System".equals(a.getSenderName());
-            boolean bSysUnread = !b.read() && "System".equals(b.getSenderName());
+            boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
+            boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
             if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });

@@ -114,7 +114,15 @@ public class MailDetailScreen extends Screen {
         renderScrollbar(g, right, viewportTop, viewportBottom, viewportHeight, contentHeight);
 
         // 发件人（底部居中）
-        String sender = summary.getSenderName() != null && !summary.getSenderName().isEmpty() ? summary.getSenderName() : Component.translatable("screen.dovemail.mailbox.sender.unknown").getString();
+        String rawSender = summary.getSenderName() != null && !summary.getSenderName().isEmpty() ? summary.getSenderName() : null;
+        String sender;
+        if ("System".equals(rawSender)) {
+            sender = Component.translatable("sender.dovemail.system").getString();
+        } else if (rawSender == null) {
+            sender = Component.translatable("screen.dovemail.mailbox.sender.unknown").getString();
+        } else {
+            sender = rawSender;
+        }
         Component senderText = Component.translatable("screen.dovemail.mail.sender_prefix", sender);
         g.drawCenteredString(this.font, senderText, this.width / 2, this.height - PADDING - 12, 0xAAAAAA);
     }

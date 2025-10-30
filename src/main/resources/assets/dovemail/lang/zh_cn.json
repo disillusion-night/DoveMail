@@ -46,4 +46,5 @@
   "screen.dovemail.compose.settings": "写信设置",
   "option.dovemail.send_as_system": "以 System 身份发送",
   "option.dovemail.send_as_announcement": "作为公告发送（上线自动弹出）"
+  ,"sender.dovemail.system": "系统"
 }

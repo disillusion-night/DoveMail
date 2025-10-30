@@ -36,5 +36,6 @@
   "button.dovemail.settings": "Settings",
   "screen.dovemail.compose.settings": "Compose Settings",
   "option.dovemail.send_as_system": "Send as System",
-  "option.dovemail.send_as_announcement": "As announcement (auto popup)"
+  "option.dovemail.send_as_announcement": "As announcement (auto popup)",
+  "sender.dovemail.system": "System"
 }

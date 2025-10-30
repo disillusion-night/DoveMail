@@ -62,9 +62,14 @@ public class MailCardRenderer {
         String subjectLine = font.plainSubstrByWidth(subject.getString(), textWidth);
         g.drawString(font, subjectLine, textLeft, top + 4, 0xFFFFFF, false);
 
-        String senderName = summary.getSenderName() != null && !summary.getSenderName().isEmpty()
-                ? summary.getSenderName()
-                : Component.translatable("screen.dovemail.mailbox.sender.unknown").getString();
+        String senderName;
+        if (summary.getSenderName() == null || summary.getSenderName().isEmpty()) {
+            senderName = Component.translatable("screen.dovemail.mailbox.sender.unknown").getString();
+        } else if ("System".equals(summary.getSenderName())) {
+            senderName = Component.translatable("sender.dovemail.system").getString();
+        } else {
+            senderName = summary.getSenderName();
+        }
         String senderLine = font.plainSubstrByWidth(senderName, textWidth);
         g.drawString(font, Component.literal(senderLine), textLeft, top + 16, 0xB0E0FF, false);
 
