@@ -41,5 +41,9 @@
   "message.dovemail.test.created": "已为你生成 %s 封测试邮件。",
   "message.dovemail.test.cleared": "已清空你的收件箱。",
   "message.dovemail.attachments.already_claimed": "附件已领取。",
-  "message.dovemail.attachments.none": "没有可领取的附件。"
+  "message.dovemail.attachments.none": "没有可领取的附件。",
+  "button.dovemail.settings": "设置",
+  "screen.dovemail.compose.settings": "写信设置",
+  "option.dovemail.send_as_system": "以 System 身份发送",
+  "option.dovemail.send_as_announcement": "作为公告发送（上线自动弹出）"
 }

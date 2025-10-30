@@ -32,7 +32,7 @@
   "key.dovemail.open_mailbox": "Open Mailbox",
   "message.dovemail.delete_read.result": "Deleted %s; skipped %s (unclaimed attachments)",
   "message.dovemail.attachments.already_claimed": "Attachments already claimed.",
-  "message.dovemail.attachments.none": "No attachments to claim."
+  "message.dovemail.attachments.none": "No attachments to claim.",
   "button.dovemail.settings": "Settings",
   "screen.dovemail.compose.settings": "Compose Settings",
   "option.dovemail.send_as_system": "Send as System",

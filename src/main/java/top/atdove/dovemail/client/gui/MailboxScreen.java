@@ -13,7 +13,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -37,7 +36,12 @@ public class MailboxScreen extends Screen {
     public MailboxScreen(List<MailSummary> summaries) {
         super(Component.translatable("screen.dovemail.mailbox"));
         this.mailSummaries = new ArrayList<>(summaries != null ? summaries : Collections.emptyList());
-        this.mailSummaries.sort(Comparator.comparingLong(MailSummary::getTimestamp).reversed());
+        this.mailSummaries.sort((a, b) -> {
+            boolean aSysUnread = !a.read() && "System".equals(a.getSenderName());
+            boolean bSysUnread = !b.read() && "System".equals(b.getSenderName());
+            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            return Long.compare(b.getTimestamp(), a.getTimestamp());
+        });
     }
 
     @Override

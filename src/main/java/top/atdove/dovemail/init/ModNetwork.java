@@ -181,11 +181,11 @@ public final class ModNetwork {
 
             // 管理员群发：@a 在线所有玩家；* 所有已知玩家（含不在线）
             if ("@a".equals(target)) {
-                handleBroadcastCompose(sender, payload.subject(), payload.body(), false);
+                handleBroadcastCompose(sender, payload.subject(), payload.body(), false, asSystem, asAnnouncement);
                 return;
             }
             if ("*".equals(target)) {
-                handleBroadcastCompose(sender, payload.subject(), payload.body(), true);
+                handleBroadcastCompose(sender, payload.subject(), payload.body(), true, asSystem, asAnnouncement);
                 return;
             }
 
@@ -241,7 +241,7 @@ public final class ModNetwork {
         });
     }
 
-    private static void handleBroadcastCompose(net.minecraft.server.level.ServerPlayer sender, String subject, String body, boolean includeKnownOffline) {
+    private static void handleBroadcastCompose(net.minecraft.server.level.ServerPlayer sender, String subject, String body, boolean includeKnownOffline, boolean asSystem, boolean asAnnouncement) {
         if (!sender.hasPermissions(3)) {
             sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.no_permission"));
             return;
@@ -260,6 +260,10 @@ public final class ModNetwork {
              .setTimestamp(System.currentTimeMillis())
              .setRead(false)
              .setAttachmentsClaimed(false);
+            if (asSystem) {
+                m.setSenderName("System");
+                if (asAnnouncement) m.setAnnouncement(true);
+            }
             if (!baseAttachments.isEmpty()) {
                 var copy = new java.util.ArrayList<net.minecraft.world.item.ItemStack>(baseAttachments.size());
                 for (var st : baseAttachments) copy.add(st.copy());
