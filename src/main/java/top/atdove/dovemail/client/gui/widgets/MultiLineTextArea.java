@@ -11,8 +11,8 @@ import javax.annotation.Nonnull;
 
 public class MultiLineTextArea extends AbstractWidget {
     private final net.minecraft.client.gui.Font font;
-    // Reduce extra space between lines so lines stack tightly without gaps
-    private static final int LINE_SPACING = 0;
+    // Per-instance line spacing (pixels) added on top of font.lineHeight, to match other screens' visual density
+    private int lineSpacing = 0;
     private final StringBuilder value = new StringBuilder();
     private int cursor = 0; // cursor index in value
     private int desiredColumn = -1; // track target column for up/down
@@ -31,12 +31,21 @@ public class MultiLineTextArea extends AbstractWidget {
         final int start; // start index in value (inclusive)
         final int end;   // end index in value (exclusive)
         final String text; // value.substring(start, end)
-        VisualLine(int start, int end, String text) { this.start = start; this.end = end; this.text = text; }
+        final boolean softWrap; // true if this visual line continues due to width wrap (not hard newline nor end-of-text)
+        VisualLine(int start, int end, String text, boolean softWrap) { this.start = start; this.end = end; this.text = text; this.softWrap = softWrap; }
     }
 
     public MultiLineTextArea(int x, int y, int width, int height, net.minecraft.client.gui.Font font, Component title) {
         super(x, y, width, height, title);
         this.font = font;
+    }
+
+    public int getLineSpacing() {
+        return lineSpacing;
+    }
+
+    public void setLineSpacing(int lineSpacing) {
+        this.lineSpacing = Math.max(-font.lineHeight + 1, lineSpacing); // prevent non-positive line advance
     }
 
     public String getValue() {
@@ -81,7 +90,7 @@ public class MultiLineTextArea extends AbstractWidget {
     }
 
     private void ensureCursorVisible() {
-        int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
+    int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + lineSpacing));
         int line = getLineOfIndex(cursor);
         if (line < firstVisibleLine) firstVisibleLine = line;
         if (line >= firstVisibleLine + visibleLines) firstVisibleLine = line - visibleLines + 1;
@@ -101,7 +110,7 @@ public class MultiLineTextArea extends AbstractWidget {
 
         // draw text lines & selection background (soft wrap)
         ensureLayout();
-        int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
+    int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + lineSpacing));
         int y = getY() + 2;
         for (int i = 0; i < visibleLines; i++) {
             int lineIdx = firstVisibleLine + i;
@@ -109,7 +118,15 @@ public class MultiLineTextArea extends AbstractWidget {
             VisualLine vl = layout.get(lineIdx);
             highlightSelectionOnVisualLine(g, y, vl);
             g.drawString(font, vl.text, getX() + H_PADDING, y, 0xEEEEEE, false);
-            y += font.lineHeight + LINE_SPACING;
+            // draw a small wrap indicator at end if this visual line is a soft wrap continuation
+            if (vl.softWrap) {
+                int xEnd = getX() + H_PADDING + font.width(vl.text);
+                int baseY = y + font.lineHeight - 1;
+                // a tiny corner mark ↴
+                g.hLine(xEnd, xEnd + 3, baseY, 0x66FFFFFF);
+                g.vLine(xEnd + 3, baseY - 3, baseY, 0x66FFFFFF);
+            }
+            y += font.lineHeight + lineSpacing;
         }
 
         // caret
@@ -119,7 +136,7 @@ public class MultiLineTextArea extends AbstractWidget {
             if (curLine >= firstVisibleLine && curLine < firstVisibleLine + visibleLines) {
                 VisualLine vl = layout.get(curLine);
                 int cx = getX() + H_PADDING + font.width(safeSubstring(vl.text, 0, curCol));
-                int cy = getY() + 2 + (curLine - firstVisibleLine) * (font.lineHeight + LINE_SPACING);
+                int cy = getY() + 2 + (curLine - firstVisibleLine) * (font.lineHeight + lineSpacing);
                 g.fill(cx, cy, cx + 1, cy + font.lineHeight, 0xFFFFFFFF);
             }
         }
@@ -139,7 +156,7 @@ public class MultiLineTextArea extends AbstractWidget {
         if (inside && button == 0) {
             this.setFocused(true);
             ensureLayout();
-            int line = (int) Math.floor((mouseY - getY() - 2) / (font.lineHeight + LINE_SPACING)) + firstVisibleLine;
+            int line = (int) Math.floor((mouseY - getY() - 2) / (font.lineHeight + lineSpacing)) + firstVisibleLine;
             line = Mth.clamp(line, 0, Math.max(0, layout.size() - 1));
             int col = xToColumnOnVisualLine(line, (int) (mouseX - getX() - H_PADDING));
             cursor = getIndexOfLineColumn(line, col);
@@ -157,7 +174,7 @@ public class MultiLineTextArea extends AbstractWidget {
         if (!this.active || !this.visible || !this.isFocused()) return false;
         if (button != 0) return false;
         ensureLayout();
-        int line = (int) Math.floor((mouseY - getY() - 2) / (font.lineHeight + LINE_SPACING)) + firstVisibleLine;
+    int line = (int) Math.floor((mouseY - getY() - 2) / (font.lineHeight + lineSpacing)) + firstVisibleLine;
         line = Mth.clamp(line, 0, Math.max(0, layout.size() - 1));
         int col = xToColumnOnVisualLine(line, (int) (mouseX - getX() - H_PADDING));
         int idx = getIndexOfLineColumn(line, col);
@@ -170,7 +187,7 @@ public class MultiLineTextArea extends AbstractWidget {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         int total = lineCount();
-        int visible = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
+    int visible = Math.max(1, (this.height - 4) / (font.lineHeight + lineSpacing));
         if (total > visible) {
             int step = deltaY > 0 ? -1 : 1;
             firstVisibleLine = Mth.clamp(firstVisibleLine + step, 0, Math.max(0, total - visible));
@@ -327,7 +344,7 @@ public class MultiLineTextArea extends AbstractWidget {
         int bCol = b - vl.start;
         int ax = getX() + H_PADDING + font.width(safeSubstring(vl.text, 0, aCol));
         int bx = getX() + H_PADDING + font.width(safeSubstring(vl.text, 0, bCol));
-        g.fill(ax, y - 1, bx, y + font.lineHeight + 1, 0x554A90E2);
+    g.fill(ax, y, bx, y + font.lineHeight, 0x554A90E2);
     }
 
     private boolean handleShortcut(int keyCode, boolean ctrlOrMeta) {
@@ -415,26 +432,31 @@ public class MultiLineTextArea extends AbstractWidget {
         layoutForVersion = contentVersion;
         layout = new java.util.ArrayList<>();
         int i = 0;
-        while (i < value.length()) {
+        boolean prevWasNewline = true; // treat start-of-text as if after a newline to allow leading empty line
+        int len = value.length();
+        while (i < len) {
             char c = value.charAt(i);
             if (c == '\n') {
-                layout.add(new VisualLine(i, i, ""));
+                // Only materialize an empty visual line for consecutive newlines
+                if (prevWasNewline) {
+                    layout.add(new VisualLine(i, i, "", false));
+                }
+                prevWasNewline = true;
                 i++;
             } else {
                 i = appendWrappedSegment(i, available);
+                prevWasNewline = false;
             }
         }
-        // trailing empty line if text ends with newline
-        int len = value.length();
-        char last = len == 0 ? '\0' : value.charAt(len - 1);
-        if (last == '\n') {
-            layout.add(new VisualLine(len, len, ""));
+        // If text ends with one or more newlines, ensure a final empty visual line exists
+        if (prevWasNewline) {
+            layout.add(new VisualLine(len, len, "", false));
         }
         if (layout.isEmpty()) {
-            layout.add(new VisualLine(0, 0, ""));
+            layout.add(new VisualLine(0, 0, "", false));
         }
         // clamp firstVisibleLine if needed
-        int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
+        int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + lineSpacing));
         firstVisibleLine = Mth.clamp(firstVisibleLine, 0, Math.max(0, layout.size() - visibleLines));
     }
 
@@ -449,13 +471,19 @@ public class MultiLineTextArea extends AbstractWidget {
         if (end == start) {
             end = Math.min(value.length(), start + 1);
         }
-        layout.add(new VisualLine(start, end, value.substring(start, end)));
+        boolean softWrap = false;
+        if (end < value.length()) {
+            char next = value.charAt(end);
+            if (next != '\n') {
+                softWrap = true; // wrapped due to width, not a hard newline
+            }
+        }
+        layout.add(new VisualLine(start, end, value.substring(start, end), softWrap));
         return end;
     }
 
     private int normalizeIndexForLayout(int idx) {
-        // 不向前折返到换行符前一列：当光标位于换行后（idx 位于 '\n' 之后），
-        // 应该定位到下一可见行的列 0，而不是上一行的末尾，避免“换行后光标跳到上一行末尾”的错觉。
+        // 索引规范化：仅进行边界夹取。是否归属到上一行或下一行由 getVisualLineOfIndex 决定。
         return Mth.clamp(idx, 0, value.length());
     }
 
@@ -464,7 +492,8 @@ public class MultiLineTextArea extends AbstractWidget {
         int norm = normalizeIndexForLayout(idx);
         for (int i = 0; i < layout.size(); i++) {
             VisualLine vl = layout.get(i);
-            // idx in [start, end], prefer this line
+            // 规则：end 作为“包含”上界 —— 光标位于段尾（换行符前）视作该行末尾。
+            // 空行（start==end）也能在 norm==start 时命中该行。
             if (norm >= vl.start && norm <= vl.end) return i;
         }
         return Math.max(0, layout.size() - 1);
