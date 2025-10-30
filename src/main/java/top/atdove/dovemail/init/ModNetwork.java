@@ -98,6 +98,49 @@ public final class ModNetwork {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleUnreadHint(payload.count()));
     }
 
+    private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            var level = player.serverLevel();
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
+            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
+                if (!mail.isRead()) {
+                    mail.markRead();
+                    storage.setDirty();
+                    var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+                    top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
+                }
+                var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
+                top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
+            });
+        });
+    }
+
+    private static void onServerClaimAttachments(top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            var level = player.serverLevel();
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
+            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
+                var list = new java.util.ArrayList<>(mail.getAttachments());
+                for (var stack : list) {
+                    if (stack == null || stack.isEmpty()) continue;
+                    if (!player.getInventory().add(stack.copy())) {
+                        player.drop(stack.copy(), false);
+                    }
+                }
+                mail.markAttachmentsClaimed().markRead();
+                storage.setDirty();
+                var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
+                top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
+                var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
+            });
+        });
+    }
+
     private static void onServerComposeMail(top.atdove.dovemail.network.payload.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
