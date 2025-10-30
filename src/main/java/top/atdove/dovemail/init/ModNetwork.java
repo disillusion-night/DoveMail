@@ -124,15 +124,26 @@ public final class ModNetwork {
             var level = player.serverLevel();
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
             storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
+                // Idempotent guard: if already claimed or no attachments, just refresh detail and exit
+                if (mail.isAttachmentsClaimed() || mail.getAttachments().isEmpty()) {
+                    var detail0 = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
+                    top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail0);
+                    return;
+                }
+
                 var list = new java.util.ArrayList<>(mail.getAttachments());
                 for (var stack : list) {
                     if (stack == null || stack.isEmpty()) continue;
-                    if (!player.getInventory().add(stack.copy())) {
-                        player.drop(stack.copy(), false);
+                    var toGive = stack.copy();
+                    if (!player.getInventory().add(toGive)) {
+                        player.drop(toGive, false);
                     }
                 }
+                // Clear attachments to avoid double-claiming on repeated requests
+                mail.getAttachments().clear();
                 mail.markAttachmentsClaimed().markRead();
                 storage.setDirty();
+
                 var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
                 var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
