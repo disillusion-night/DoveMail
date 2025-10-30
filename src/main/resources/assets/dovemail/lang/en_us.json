@@ -21,6 +21,8 @@
   "message.dovemail.compose.sent": "Mail sent to %s.",
   "message.dovemail.compose.sent_offline": "Player %s is offline; mail has been stored and will be delivered when they join.",
   "message.dovemail.compose.recipient_not_found": "Player %s not found (never joined or no inbox).",
+  "message.dovemail.compose.no_permission": "You don't have permission to broadcast.",
+  "message.dovemail.compose.broadcast_result": "Broadcasted %s mails (online %s, offline %s)",
   "message.dovemail.inbox.unread_on_login": "You have %s unread mails.",
   "button.dovemail.prevPage": "Prev Page",
   "button.dovemail.nextPage": "Next Page",
