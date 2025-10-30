@@ -253,6 +253,10 @@ public class Mail {
         return this;
     }
 
+    public MailSummary toSummary() {
+        return new MailSummary(id, subject, bodyJson, timestamp, read, attachmentsClaimed);
+    }
+
     public static String plainTextToJsonComponent(String text) {
         return componentToJson(Component.literal(text != null ? text : ""));
     }

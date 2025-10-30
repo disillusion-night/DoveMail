@@ -7,6 +7,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 import top.atdove.dovemail.mail.Mail;
+import top.atdove.dovemail.mail.MailSummary;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,6 +87,18 @@ public class MailStorage extends SavedData {
             return Collections.emptyList();
         }
         return Collections.unmodifiableCollection(inbox.values());
+    }
+
+    public List<MailSummary> getSummaries(UUID playerId) {
+        LinkedHashMap<UUID, Mail> inbox = inboxes.get(playerId);
+        if (inbox == null || inbox.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<MailSummary> summaries = new ArrayList<>(inbox.size());
+        for (Mail mail : inbox.values()) {
+            summaries.add(mail.toSummary());
+        }
+        return summaries;
     }
 
     public Collection<Mail> getAll() {
