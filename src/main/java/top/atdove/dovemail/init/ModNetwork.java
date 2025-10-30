@@ -205,9 +205,7 @@ public final class ModNetwork {
             // 普通单人发送逻辑（支持离线但已知的玩家）
             var maybeRecipient = resolveRecipient(server, storage, target);
             if (maybeRecipient == null) {
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                        "message.dovemail.compose.recipient_not_found", target
-                ));
+                sendUiAlert(sender, "message.dovemail.compose.recipient_not_found", target);
                 return;
             }
 
@@ -227,7 +225,7 @@ public final class ModNetwork {
                         mail.setAnnouncement(true);
                     }
                 } else {
-                    sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.no_permission"));
+                    sendUiAlert(sender, "message.dovemail.compose.no_permission");
                 }
             }
 
@@ -252,7 +250,7 @@ public final class ModNetwork {
 
     private static void handleBroadcastCompose(net.minecraft.server.level.ServerPlayer sender, String subject, String body, boolean includeKnownOffline, boolean asSystem, boolean asAnnouncement) {
         if (!sender.hasPermissions(3)) {
-            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.no_permission"));
+            sendUiAlert(sender, "message.dovemail.compose.no_permission");
             return;
         }
         var level = sender.serverLevel();
@@ -306,6 +304,12 @@ public final class ModNetwork {
         sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
                 "message.dovemail.compose.broadcast_result", onlineCount + offlineCount, onlineCount, offlineCount
         ));
+    }
+
+    private static void sendUiAlert(net.minecraft.server.level.ServerPlayer player, String key, String... args) {
+        java.util.List<String> list = java.util.Arrays.asList(args);
+        var pkt = new top.atdove.dovemail.network.payload.ClientboundUiAlertPayload(key, list);
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
     }
 
     private record ResolvedRecipient(java.util.UUID uuid, net.minecraft.server.level.ServerPlayer online) {}
