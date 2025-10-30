@@ -1,0 +1,27 @@
+{
+  "itemGroup.dovemail": "示例模组选项卡",
+  "block.dovemail.example_block": "示例方块",
+  "item.dovemail.example_item": "示例物品",
+
+  "screen.dovemail.mailbox": "信箱",
+  "screen.dovemail.mailbox.empty": "你的收件箱是空的。",
+  "screen.dovemail.mailbox.attachments": "含附件",
+  "screen.dovemail.mailbox.sender.unknown": "未知发件人",
+
+  "screen.dovemail.mail.detail": "邮件详情",
+  "screen.dovemail.mail.attachments": "附件",
+  "button.dovemail.claim": "一键领取",
+  "screen.dovemail.mail.sender_prefix": "来自：%s",
+
+  "screen.dovemail.compose": "写邮件",
+  "screen.dovemail.compose.to": "收件人",
+  "screen.dovemail.compose.subject": "主题",
+  "screen.dovemail.compose.body": "正文",
+  "screen.dovemail.compose.send": "发送",
+
+  "message.dovemail.compose.target_offline": "玩家 %s 不在线。",
+  "message.dovemail.compose.sent": "已将邮件发送给 %s。",
+
+  "message.dovemail.test.created": "已为你生成 %s 封测试邮件。",
+  "message.dovemail.test.cleared": "已清空你的收件箱。"
+}
