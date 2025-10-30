@@ -25,16 +25,16 @@ public final class ModNetwork {
         var registrar = event.registrar(Dovemail.MODID).versioned("1");
 
         // Clientbound
-        registrar.playToClient(
-                top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.PACKET_TYPE,
-                top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.STREAM_CODEC,
-                (payload, ctx) -> onClientMailSummary(payload, ctx)
-        );
-        registrar.playToClient(
-                top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.PACKET_TYPE,
-                top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.STREAM_CODEC,
-                (payload, ctx) -> onClientMailDetail(payload, ctx)
-        );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload.STREAM_CODEC,
+        ModNetwork::onClientMailSummary
+    );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundMailDetailPayload.STREAM_CODEC,
+        ModNetwork::onClientMailDetail
+    );
     registrar.playToClient(
         top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.STREAM_CODEC,
@@ -42,16 +42,16 @@ public final class ModNetwork {
     );
 
         // Serverbound
-        registrar.playToServer(
-                top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.PACKET_TYPE,
-                top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.STREAM_CODEC,
-                (payload, ctx) -> onServerRequestMailDetail(payload, ctx)
-        );
-        registrar.playToServer(
-                top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.PACKET_TYPE,
-                top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.STREAM_CODEC,
-                (payload, ctx) -> onServerClaimAttachments(payload, ctx)
-        );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload.STREAM_CODEC,
+        ModNetwork::onServerRequestMailDetail
+    );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload.STREAM_CODEC,
+        ModNetwork::onServerClaimAttachments
+    );
     registrar.playToServer(
         top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.STREAM_CODEC,
@@ -60,7 +60,7 @@ public final class ModNetwork {
     registrar.playToServer(
         top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.STREAM_CODEC,
-        (payload, ctx) -> onServerOpenMailbox(payload, ctx)
+        ModNetwork::onServerOpenMailbox
     );
 
         LOGGER.debug("[DoveMail] Payload registrar initialized and payloads registered");
@@ -159,6 +159,7 @@ public final class ModNetwork {
         });
     }
 
+    @SuppressWarnings("unused")
     private static void onServerOpenMailbox(top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();

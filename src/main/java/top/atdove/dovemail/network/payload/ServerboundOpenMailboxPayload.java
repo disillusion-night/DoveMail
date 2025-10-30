@@ -8,7 +8,7 @@ import top.atdove.dovemail.Dovemail;
 
 public record ServerboundOpenMailboxPayload() implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<ServerboundOpenMailboxPayload> PACKET_TYPE =
-            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Dovemail.MODID, "open_mailbox"));
+        new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Dovemail.MODID, "open_mailbox_request"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ServerboundOpenMailboxPayload> STREAM_CODEC =
             StreamCodec.of((buf, payload) -> {}, buf -> new ServerboundOpenMailboxPayload());
