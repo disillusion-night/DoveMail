@@ -54,6 +54,7 @@ public class Dovemail {
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.addListener(MailEvents::onPlayerLoggedIn);
     NeoForge.EVENT_BUS.addListener(top.atdove.dovemail.command.DovemailCommands::onRegisterCommands);
+    NeoForge.EVENT_BUS.addListener(top.atdove.dovemail.command.DovemailTestCommands::onRegisterCommands);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
