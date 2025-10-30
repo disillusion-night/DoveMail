@@ -5,6 +5,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import javax.annotation.Nonnull;
 import top.atdove.dovemail.network.DovemailNetwork;
 import top.atdove.dovemail.client.gui.widgets.MultiLineTextArea;
 
@@ -66,7 +67,7 @@ public class ComposeMailScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(@Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
 
@@ -84,12 +85,13 @@ public class ComposeMailScreen extends Screen {
 
         g.drawCenteredString(font, this.title, centerX, panelTop + 8, 0xFFFFFF);
         int labelLeft = panelLeft + 12;
-        int y = panelTop + 34;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.to"), labelLeft, y, 0xA0A0A0, false);
-        y += 26;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), labelLeft, y, 0xA0A0A0, false);
-    y += 26;
-    g.drawString(font, Component.translatable("screen.dovemail.compose.body"), labelLeft, y, 0xA0A0A0, false);
+        // Align labels vertically with actual widgets
+        int toLabelY = toBox.getY() + (toBox.getHeight() - font.lineHeight) / 2;
+        g.drawString(font, Component.translatable("screen.dovemail.compose.to"), labelLeft, toLabelY, 0xA0A0A0, false);
+        int subjectLabelY = subjectBox.getY() + (subjectBox.getHeight() - font.lineHeight) / 2;
+        g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), labelLeft, subjectLabelY, 0xA0A0A0, false);
+        int bodyLabelY = bodyArea.getY() + (bodyArea.getHeight() - font.lineHeight) / 2;
+        g.drawString(font, Component.translatable("screen.dovemail.compose.body"), labelLeft, bodyLabelY, 0xA0A0A0, false);
 
         // 占位提示（当输入框为空时）
         if (toBox.getValue().isEmpty()) {

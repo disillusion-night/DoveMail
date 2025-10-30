@@ -1,10 +1,8 @@
 package top.atdove.dovemail;
 
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.registries.BuiltInRegistries;
 // unused imports removed after refactor
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -68,15 +66,8 @@ public class Dovemail {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        // Some common setup code
-        LOGGER.info("HELLO FROM COMMON SETUP");
-
-        if (Config.logDirtBlock)
-            LOGGER.info("DIRT BLOCK >> {}", BuiltInRegistries.BLOCK.getKey(Blocks.DIRT));
-
-    LOGGER.info("{}{}", Config.magicNumberIntroduction, Config.magicNumber);
-
-    Config.items.forEach(item -> LOGGER.info("ITEM >> {}", item));
+    // Some common setup code
+    LOGGER.info("HELLO FROM COMMON SETUP");
     }
 
     // Add the example block item to the building blocks tab

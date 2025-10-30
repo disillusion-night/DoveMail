@@ -1,6 +1,7 @@
 package top.atdove.dovemail.network;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import top.atdove.dovemail.client.gui.MailDetailScreen;
 import top.atdove.dovemail.client.gui.MailboxScreen;
@@ -14,10 +15,8 @@ public final class DovemailClientHooks {
 
     public static void onMailDetailReceived(UUID mailId, List<ItemStack> attachments) {
         var mc = Minecraft.getInstance();
-        if (mc.screen instanceof MailDetailScreen screen) {
-            if (screen.getMailId().equals(mailId)) {
-                screen.setAttachments(attachments);
-            }
+        if (mc.screen instanceof MailDetailScreen screen && screen.getMailId().equals(mailId)) {
+            screen.setAttachments(attachments);
         }
     }
 
@@ -30,6 +29,17 @@ public final class DovemailClientHooks {
         var mc = Minecraft.getInstance();
         if (mc.screen instanceof MailboxScreen screen) {
             screen.updateOrAppendSummary(summary);
+        }
+    }
+
+    public static void onUnreadHint(int count) {
+        if (!top.atdove.dovemail.Config.isShowUnreadToastOnLogin()) {
+            return;
+        }
+        var mc = Minecraft.getInstance();
+        Component msg = Component.translatable("message.dovemail.inbox.unread_on_login", count);
+        if (mc.gui != null) {
+            mc.gui.setOverlayMessage(msg, false);
         }
     }
 }

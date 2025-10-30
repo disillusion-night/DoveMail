@@ -21,6 +21,9 @@
 
   "message.dovemail.compose.target_offline": "玩家 %s 不在线。",
   "message.dovemail.compose.sent": "已将邮件发送给 %s。",
+  "message.dovemail.compose.sent_offline": "玩家 %s 离线，邮件已保存，将在其上线后送达。",
+  "message.dovemail.compose.recipient_not_found": "找不到玩家 %s（未曾登录或没有收件箱）。",
+  "message.dovemail.inbox.unread_on_login": "你有 %s 封未读邮件。",
 
   "button.dovemail.prevPage": "上一页",
   "button.dovemail.nextPage": "下一页",

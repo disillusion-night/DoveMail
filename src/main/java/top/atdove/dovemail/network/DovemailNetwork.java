@@ -59,6 +59,10 @@ public final class DovemailNetwork {
     public static void handleOpenMailbox(top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload payload) {
         DovemailClientHooks.onOpenMailbox(payload.summaries());
     }
+
+    public static void handleUnreadHint(int count) {
+        DovemailClientHooks.onUnreadHint(count);
+    }
     // endregion
 
     // region Server utilities (placeholders)

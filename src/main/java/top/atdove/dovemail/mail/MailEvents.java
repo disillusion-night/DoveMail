@@ -1,5 +1,6 @@
 package top.atdove.dovemail.mail;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -21,5 +22,23 @@ public final class MailEvents {
         ServerLevel level = serverPlayer.serverLevel();
         MailStorage storage = MailStorage.get(level);
         storage.ensureInbox(serverPlayer.getUUID());
+
+        // 上线提示未读邮件数量
+        long unread = storage.getAll(serverPlayer.getUUID()).stream()
+                .filter(m -> !m.isRead())
+                .count();
+        if (unread > 0) {
+            serverPlayer.sendSystemMessage(Component.translatable("message.dovemail.inbox.unread_on_login", unread));
+            // 发送客户端提示用的 payload（客户端可根据开关选择以吐司/标题栏显示）
+            var hint = new top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload((int) unread);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer, hint);
+        }
+
+        // 如果开启了开关，则自动打开邮箱
+        if (unread > 0 && top.atdove.dovemail.Config.isAutoOpenMailboxOnLoginWhenUnread()) {
+            var summaries = storage.getSummaries(serverPlayer.getUUID());
+            var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer, pkt);
+        }
     }
 }

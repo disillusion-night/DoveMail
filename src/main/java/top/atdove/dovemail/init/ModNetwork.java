@@ -40,6 +40,11 @@ public final class ModNetwork {
         top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.STREAM_CODEC,
         ModNetwork::onClientOpenMailbox
     );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload.STREAM_CODEC,
+        ModNetwork::onClientUnreadHint
+    );
 
         // Serverbound
     registrar.playToServer(
@@ -77,6 +82,10 @@ public final class ModNetwork {
 
     private static void onClientOpenMailbox(top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleOpenMailbox(payload));
+    }
+
+    private static void onClientUnreadHint(top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleUnreadHint(payload.count()));
     }
 
     private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
@@ -134,29 +143,57 @@ public final class ModNetwork {
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
 
             var server = sender.server;
-            var recipient = server.getPlayerList().getPlayerByName(payload.recipientName());
-            if (recipient == null) {
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.target_offline", payload.recipientName()));
+            var maybeRecipient = resolveRecipient(server, storage, payload.recipientName());
+            if (maybeRecipient == null) {
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                        "message.dovemail.compose.recipient_not_found", payload.recipientName()
+                ));
                 return;
             }
 
-        var mail = new top.atdove.dovemail.mail.Mail();
-        mail.setSubject(payload.subject())
-            .setBodyPlain(payload.body())
-                    .setSenderName(sender.getGameProfile().getName())
-                    .setTimestamp(System.currentTimeMillis())
-                    .setRead(false)
-                    .setAttachmentsClaimed(false);
+            var mail = new top.atdove.dovemail.mail.Mail();
+            mail.setSubject(payload.subject())
+                .setBodyPlain(payload.body())
+                .setSenderName(sender.getGameProfile().getName())
+                .setTimestamp(System.currentTimeMillis())
+                .setRead(false)
+                .setAttachmentsClaimed(false);
 
-            storage.addOrUpdate(recipient.getUUID(), mail);
+            storage.addOrUpdate(maybeRecipient.uuid(), mail);
 
-            // 可选：下发一条摘要给收件人，便于其已打开邮箱时刷新
-            var summary = mail.toSummary();
-            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(summary);
-            top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient, summaryPkt);
-
-            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", payload.recipientName()));
+            if (maybeRecipient.online() != null) {
+                var summary = mail.toSummary();
+                var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(summary);
+                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(maybeRecipient.online(), summaryPkt);
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", payload.recipientName()));
+            } else {
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", payload.recipientName()));
+            }
         });
+    }
+
+    private record ResolvedRecipient(java.util.UUID uuid, net.minecraft.server.level.ServerPlayer online) {}
+
+    private static ResolvedRecipient resolveRecipient(net.minecraft.server.MinecraftServer server,
+                                                      top.atdove.dovemail.saveddata.MailStorage storage,
+                                                      String recipientName) {
+        // 在线优先
+        var online = server.getPlayerList().getPlayerByName(recipientName);
+        if (online != null) {
+            return new ResolvedRecipient(online.getUUID(), online);
+        }
+        // 离线：要求曾经登录过（profile 可解析 且 我们存储中有该玩家的收件箱）
+        var cache = server.getProfileCache();
+        if (cache != null) {
+            var profileOpt = cache.get(recipientName);
+            if (profileOpt.isPresent()) {
+                var uuid = profileOpt.get().getId();
+                if (storage.getKnownPlayers().contains(uuid)) {
+                    return new ResolvedRecipient(uuid, null);
+                }
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unused")
