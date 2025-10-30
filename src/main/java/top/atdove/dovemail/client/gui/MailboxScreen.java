@@ -20,7 +20,7 @@ import java.util.List;
  * 简易邮件收件箱界面。
  */
 public class MailboxScreen extends Screen {
-    private static final int LIST_TOP_PADDING = 36;
+    private static final int LIST_TOP_PADDING = 50;
     private static final int CARD_HEIGHT = 42;
     private static final int CARD_WIDTH = 260;
     private static final int ICON_SIZE = 20;
@@ -43,23 +43,23 @@ public class MailboxScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        int centerX = this.width / 2;
-        int bottom = this.height - 28;
+    int centerX = this.width / 2;
+    int bottom = this.height - 28;
 
-        prevButton = Button.builder(Component.literal("<"), btn -> flipPage(-1))
-                .pos(centerX - 60, bottom)
-                .size(40, 20)
-                .build();
-        nextButton = Button.builder(Component.literal(">"), btn -> flipPage(1))
-                .pos(centerX + 20, bottom)
-                .size(40, 20)
-                .build();
+    prevButton = Button.builder(Component.translatable("button.dovemail.prevPage"), btn -> flipPage(-1))
+        .pos(centerX - 110, bottom)
+        .size(80, 20)
+        .build();
+    nextButton = Button.builder(Component.translatable("button.dovemail.nextPage"), btn -> flipPage(1))
+        .pos(centerX + 30, bottom)
+        .size(80, 20)
+        .build();
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
     // Compose button at top-right of the list
-    Button compose = Button.builder(Component.translatable("screen.dovemail.compose"), btn ->
+    Button compose = Button.builder(Component.translatable("button.dovemail.compose"), btn ->
         this.minecraft.setScreen(new ComposeMailScreen(this))
-    ).pos(centerX + CARD_WIDTH / 2 - 70, 10).size(70, 20).build();
+    ).pos(centerX + CARD_WIDTH / 2 - 80, 14).size(80, 20).build();
     addRenderableWidget(compose);
     // 初始化卡片渲染器（依赖 font 和时间格式化器）
     this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
@@ -83,7 +83,21 @@ public class MailboxScreen extends Screen {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.drawCenteredString(font, this.title, this.width / 2, 12, 0xFFFFFF);
+        // 顶部标题与背景面板
+        int centerX = this.width / 2;
+        int panelLeft = centerX - CARD_WIDTH / 2 - 10;
+        int panelRight = centerX + CARD_WIDTH / 2 + 10;
+        int panelTop = 34;
+        int panelBottom = this.height - 54;
+        // 背景面板（半透明）
+        guiGraphics.fill(panelLeft, panelTop, panelRight, panelBottom, 0x66000000);
+        // 边框
+        guiGraphics.fill(panelLeft, panelTop, panelRight, panelTop + 1, 0x33FFFFFF);
+        guiGraphics.fill(panelLeft, panelBottom - 1, panelRight, panelBottom, 0x33000000);
+        guiGraphics.fill(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x33FFFFFF);
+        guiGraphics.fill(panelRight - 1, panelTop, panelRight, panelBottom, 0x33000000);
+
+        guiGraphics.drawCenteredString(font, this.title, this.width / 2, 10, 0xFFFFFF);
 
         int startIndex = currentPage * PAGE_SIZE;
         int endIndex = Math.min(startIndex + PAGE_SIZE, mailSummaries.size());

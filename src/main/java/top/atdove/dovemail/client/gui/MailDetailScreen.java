@@ -72,15 +72,26 @@ public class MailDetailScreen extends Screen {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
 
-        // 主题（大号字体）：使用两倍字号的近似效果——再绘一次产生“粗体”观感
+        // 主面板
+        int left = PADDING;
+        int right = this.width - PADDING;
+        int top = PADDING;
+        int bottom = this.height - PADDING - 24;
+        g.fill(left - 6, top - 6, right + 6, bottom + 6, 0x66000000);
+        g.fill(left - 6, top - 6, right + 6, top - 5, 0x33FFFFFF);
+        g.fill(left - 6, bottom + 5, right + 6, bottom + 6, 0x33000000);
+        g.fill(left - 6, top - 6, left - 5, bottom + 6, 0x33FFFFFF);
+        g.fill(right + 5, top - 6, right + 6, bottom + 6, 0x33000000);
+
+        // 主题
         String subject = summary.getSubject() != null ? summary.getSubject() : "";
-        int subjectY = PADDING;
+        int subjectY = top - 2;
         g.drawCenteredString(this.font, subject, this.width / 2, subjectY, 0xFFFFFF);
 
         // 正文区域
         int bodyTop = subjectY + 18;
-        int bodyLeft = PADDING;
-        int bodyRight = this.width - PADDING;
+        int bodyLeft = left;
+        int bodyRight = right;
         int bodyWidth = Math.max(bodyRight - bodyLeft, 10);
         List<FormattedCharSequence> lines = this.font.split(summary.bodyComponent(), bodyWidth);
         int y = bodyTop;
@@ -90,8 +101,8 @@ public class MailDetailScreen extends Screen {
         }
 
         // 附件标题与网格
-        int attachmentsAreaBottom = this.height - PADDING - 38; // 为按钮和发件人留空间
-        int attachmentsTop = attachmentsAreaBottom - ATTACHMENT_SLOT_SIZE - 12;
+        int attachmentsAreaBottom = this.height - PADDING - 42; // 为按钮和发件人留空间
+        int attachmentsTop = Math.max(y + 12, attachmentsAreaBottom - ATTACHMENT_SLOT_SIZE - 12);
         if (!attachments.isEmpty() || summary.hasAttachments()) {
             g.drawString(this.font, Component.translatable("screen.dovemail.mail.attachments"), bodyLeft, attachmentsTop - 12, 0xFFFFFF, false);
 
@@ -99,7 +110,7 @@ public class MailDetailScreen extends Screen {
             int ySlots = attachmentsTop;
             for (ItemStack stack : attachments) {
                 // 背板
-                g.fill(x - 1, ySlots - 1, x + ATTACHMENT_SLOT_SIZE + 1, ySlots + ATTACHMENT_SLOT_SIZE + 1, 0x44000000);
+                g.fill(x - 1, ySlots - 1, x + ATTACHMENT_SLOT_SIZE + 1, ySlots + ATTACHMENT_SLOT_SIZE + 1, 0x55333333);
                 g.renderItem(stack, x, ySlots);
                 g.renderItemDecorations(this.font, stack, x, ySlots);
                 x += ATTACHMENT_SLOT_SIZE + ATTACHMENT_GAP;

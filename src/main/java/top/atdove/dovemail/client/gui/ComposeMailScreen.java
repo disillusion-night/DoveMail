@@ -20,30 +20,32 @@ public class ComposeMailScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int y = this.height / 2 - 50;
+    int centerX = this.width / 2;
+    int panelWidth = 300;
+    int panelLeft = centerX - panelWidth / 2;
+    int y = this.height / 2 - 70;
 
-        toBox = new EditBox(this.font, centerX - 120, y, 240, 20, Component.translatable("screen.dovemail.compose.to"));
+    toBox = new EditBox(this.font, panelLeft + 70, y, 210, 20, Component.translatable("screen.dovemail.compose.to"));
         toBox.setMaxLength(64);
         addRenderableWidget(toBox);
         y += 26;
 
-        subjectBox = new EditBox(this.font, centerX - 120, y, 240, 20, Component.translatable("screen.dovemail.compose.subject"));
+    subjectBox = new EditBox(this.font, panelLeft + 70, y, 210, 20, Component.translatable("screen.dovemail.compose.subject"));
         subjectBox.setMaxLength(120);
         addRenderableWidget(subjectBox);
         y += 26;
 
-        bodyBox = new EditBox(this.font, centerX - 120, y, 240, 20, Component.translatable("screen.dovemail.compose.body"));
+    bodyBox = new EditBox(this.font, panelLeft + 70, y, 210, 20, Component.translatable("screen.dovemail.compose.body"));
         bodyBox.setMaxLength(512);
         addRenderableWidget(bodyBox);
 
         y += 36;
-        Button send = Button.builder(Component.translatable("screen.dovemail.compose.send"), btn -> doSend())
-                .pos(centerX - 120, y)
+    Button send = Button.builder(Component.translatable("screen.dovemail.compose.send"), btn -> doSend())
+        .pos(panelLeft + 30, y)
                 .size(100, 20)
                 .build();
-        Button cancel = Button.builder(Component.translatable("gui.cancel"), btn -> onClose())
-                .pos(centerX + 20, y)
+    Button cancel = Button.builder(Component.translatable("gui.cancel"), btn -> onClose())
+        .pos(panelLeft + 170, y)
                 .size(100, 20)
                 .build();
         addRenderableWidget(send);
@@ -66,14 +68,38 @@ public class ComposeMailScreen extends Screen {
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
-        g.drawCenteredString(font, this.title, this.width / 2, this.height / 2 - 80, 0xFFFFFF);
-        int left = this.width / 2 - 120;
-        int y = this.height / 2 - 62;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.to"), left, y, 0xA0A0A0, false);
+
+        int centerX = this.width / 2;
+        int panelWidth = 300;
+        int panelLeft = centerX - panelWidth / 2;
+        int panelTop = this.height / 2 - 90;
+        int panelBottom = this.height / 2 + 90;
+        // 面板背景与边框
+        g.fill(panelLeft, panelTop, panelLeft + panelWidth, panelBottom, 0xAA000000);
+        g.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + 1, 0x33FFFFFF);
+        g.fill(panelLeft, panelBottom - 1, panelLeft + panelWidth, panelBottom, 0x33000000);
+        g.fill(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x33FFFFFF);
+        g.fill(panelLeft + panelWidth - 1, panelTop, panelLeft + panelWidth, panelBottom, 0x33000000);
+
+        g.drawCenteredString(font, this.title, centerX, panelTop + 8, 0xFFFFFF);
+        int labelLeft = panelLeft + 12;
+        int y = panelTop + 34;
+        g.drawString(font, Component.translatable("screen.dovemail.compose.to"), labelLeft, y, 0xA0A0A0, false);
         y += 26;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), left, y, 0xA0A0A0, false);
+        g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), labelLeft, y, 0xA0A0A0, false);
         y += 26;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.body"), left, y, 0xA0A0A0, false);
+        g.drawString(font, Component.translatable("screen.dovemail.compose.body"), labelLeft, y, 0xA0A0A0, false);
+
+        // 占位提示（当输入框为空时）
+        if (toBox.getValue().isEmpty()) {
+            g.drawString(font, Component.literal("e.g. PlayerName"), toBox.getX() + 4, toBox.getY() + 6, 0x555555, false);
+        }
+        if (subjectBox.getValue().isEmpty()) {
+            g.drawString(font, Component.literal("e.g. 交易邀请"), subjectBox.getX() + 4, subjectBox.getY() + 6, 0x555555, false);
+        }
+        if (bodyBox.getValue().isEmpty()) {
+            g.drawString(font, Component.literal("e.g. 今晚 8 点村口见"), bodyBox.getX() + 4, bodyBox.getY() + 6, 0x555555, false);
+        }
     }
 
     @Override

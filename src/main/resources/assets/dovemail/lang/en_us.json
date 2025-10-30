@@ -9,13 +9,15 @@
   "screen.dovemail.mail.detail": "Mail Detail",
   "screen.dovemail.mail.attachments": "Attachments",
   "button.dovemail.claim": "Claim All",
-  "screen.dovemail.mail.sender_prefix": "From: %s"
-  ,
+  "screen.dovemail.mail.sender_prefix": "From: %s",
   "screen.dovemail.compose": "Compose",
   "screen.dovemail.compose.to": "To",
   "screen.dovemail.compose.subject": "Subject",
   "screen.dovemail.compose.body": "Body",
   "screen.dovemail.compose.send": "Send",
   "message.dovemail.compose.target_offline": "Player %s is not online.",
-  "message.dovemail.compose.sent": "Mail sent to %s."
+  "message.dovemail.compose.sent": "Mail sent to %s.",
+  "button.dovemail.prevPage": "Prev Page",
+  "button.dovemail.nextPage": "Next Page",
+  "button.dovemail.compose": "Compose"
 }
