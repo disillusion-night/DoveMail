@@ -42,14 +42,19 @@ public class ComposeMailScreen extends Screen {
     addRenderableWidget(bodyArea);
 
     y += areaHeight + 16;
-    Button send = Button.builder(Component.translatable("screen.dovemail.compose.send"), btn -> doSend())
+    Button attach = Button.builder(Component.translatable("button.dovemail.add_attachments"), btn -> top.atdove.dovemail.network.DovemailNetwork.openAttachments())
         .pos(panelLeft + 30, y)
                 .size(100, 20)
                 .build();
-    Button cancel = Button.builder(Component.translatable("gui.cancel"), btn -> onClose())
-        .pos(panelLeft + 170, y)
+    Button send = Button.builder(Component.translatable("screen.dovemail.compose.send"), btn -> doSend())
+        .pos(panelLeft + 140, y)
                 .size(100, 20)
                 .build();
+    Button cancel = Button.builder(Component.translatable("gui.cancel"), btn -> onClose())
+        .pos(panelLeft + 250, y)
+                .size(100, 20)
+                .build();
+        addRenderableWidget(attach);
         addRenderableWidget(send);
         addRenderableWidget(cancel);
 
@@ -90,8 +95,7 @@ public class ComposeMailScreen extends Screen {
         g.drawString(font, Component.translatable("screen.dovemail.compose.to"), labelLeft, toLabelY, 0xA0A0A0, false);
         int subjectLabelY = subjectBox.getY() + (subjectBox.getHeight() - font.lineHeight) / 2;
         g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), labelLeft, subjectLabelY, 0xA0A0A0, false);
-        int bodyLabelY = bodyArea.getY() + (bodyArea.getHeight() - font.lineHeight) / 2;
-        g.drawString(font, Component.translatable("screen.dovemail.compose.body"), labelLeft, bodyLabelY, 0xA0A0A0, false);
+    // 去掉“正文”标签显示
 
         // 占位提示（当输入框为空时）
         if (toBox.getValue().isEmpty()) {

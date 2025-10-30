@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import top.atdove.dovemail.network.DovemailNetwork;
 
 public final class DovemailClientInit {
@@ -26,5 +27,9 @@ public final class DovemailClientInit {
         if (openMailboxKey != null && openMailboxKey.consumeClick()) {
             DovemailNetwork.openMailbox();
         }
+    }
+
+    public static void onRegisterMenuScreens(RegisterMenuScreensEvent event) {
+        event.register(top.atdove.dovemail.init.ModMenus.ATTACHMENTS.get(), top.atdove.dovemail.menu.AttachmentsScreen::new);
     }
 }

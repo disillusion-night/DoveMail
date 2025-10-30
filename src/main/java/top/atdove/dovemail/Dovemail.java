@@ -19,6 +19,7 @@ import top.atdove.dovemail.init.ModBlocks;
 import top.atdove.dovemail.init.ModItems;
 import top.atdove.dovemail.init.ModTabs;
 import top.atdove.dovemail.init.ModNetwork;
+import top.atdove.dovemail.init.ModMenus;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Dovemail.MODID)
@@ -43,8 +44,10 @@ public class Dovemail {
         ModItems.register(modEventBus);
         ModTabs.register(modEventBus);
         ModNetwork.register(modEventBus);
+        ModMenus.register(modEventBus);
         // Client-only listeners (safe to register; only fire on client)
         modEventBus.addListener(top.atdove.dovemail.client.DovemailClientInit::onRegisterKeyMappings);
+        modEventBus.addListener(top.atdove.dovemail.client.DovemailClientInit::onRegisterMenuScreens);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Dovemail) to

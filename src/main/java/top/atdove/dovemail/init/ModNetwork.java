@@ -72,6 +72,11 @@ public final class ModNetwork {
         top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload.STREAM_CODEC,
         ModNetwork::onServerDeleteReadMails
     );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload.STREAM_CODEC,
+        ModNetwork::onServerOpenAttachments
+    );
 
         LOGGER.debug("[DoveMail] Payload registrar initialized and payloads registered");
     }
@@ -164,6 +169,12 @@ public final class ModNetwork {
                 .setRead(false)
                 .setAttachmentsClaimed(false);
 
+            // 将玩家附件容器中的物品作为邮件附件并清空容器
+            var attachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
+            if (!attachments.isEmpty()) {
+                mail.setAttachments(attachments);
+            }
+
             storage.addOrUpdate(maybeRecipient.uuid(), mail);
 
             if (maybeRecipient.online() != null) {
@@ -249,4 +260,22 @@ public final class ModNetwork {
         return new DeleteResult(deleted, skipped);
     }
     // endregion
+
+    private static void onServerOpenAttachments(top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            player.openMenu(new net.minecraft.world.MenuProvider() {
+                @Override
+                public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int id, @javax.annotation.Nonnull net.minecraft.world.entity.player.Inventory inv, @javax.annotation.Nonnull net.minecraft.world.entity.player.Player playerEntity) {
+                    return new top.atdove.dovemail.menu.AttachmentMenu(id, inv, top.atdove.dovemail.menu.AttachmentManager.get(player));
+                }
+
+                @Override
+                public net.minecraft.network.chat.Component getDisplayName() {
+                    return net.minecraft.network.chat.Component.translatable("screen.dovemail.attachments");
+                }
+            });
+        });
+    }
 }

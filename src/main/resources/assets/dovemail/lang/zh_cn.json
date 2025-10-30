@@ -18,6 +18,8 @@
   "screen.dovemail.compose.subject": "主题",
   "screen.dovemail.compose.body": "正文",
   "screen.dovemail.compose.send": "发送",
+  "button.dovemail.add_attachments": "添加附件",
+  "screen.dovemail.attachments": "附件",
 
   "message.dovemail.compose.target_offline": "玩家 %s 不在线。",
   "message.dovemail.compose.sent": "已将邮件发送给 %s。",

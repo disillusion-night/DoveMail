@@ -52,6 +52,13 @@ public final class DovemailNetwork {
         );
         LOGGER.debug("[DoveMail] deleteReadMails request sent");
     }
+
+    public static void openAttachments() {
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(
+                new top.atdove.dovemail.network.payload.ServerboundOpenAttachmentsPayload()
+        );
+        LOGGER.debug("[DoveMail] openAttachments request sent");
+    }
     // endregion
 
     // region Server -> Client callbacks (client execution)
