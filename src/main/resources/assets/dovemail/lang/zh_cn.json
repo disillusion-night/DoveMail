@@ -27,6 +27,8 @@
   "message.dovemail.compose.recipient_not_found": "找不到玩家 %s（未曾登录或没有收件箱）。",
   "message.dovemail.compose.no_permission": "你没有权限进行群发。",
   "message.dovemail.compose.broadcast_result": "已群发 %s 封（在线 %s，离线 %s）",
+  "message.dovemail.compose.subject_required": "请填写主题。",
+  "message.dovemail.compose.recipient_required": "请填写收件人。",
   "message.dovemail.inbox.unread_on_login": "你有 %s 封未读邮件。",
 
   "button.dovemail.prevPage": "上一页",

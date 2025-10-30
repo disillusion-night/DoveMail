@@ -37,5 +37,7 @@
   "screen.dovemail.compose.settings": "Compose Settings",
   "option.dovemail.send_as_system": "Send as System",
   "option.dovemail.send_as_announcement": "As announcement (auto popup)",
-  "sender.dovemail.system": "System"
+  "sender.dovemail.system": "System",
+  "message.dovemail.compose.subject_required": "Please enter a subject.",
+  "message.dovemail.compose.recipient_required": "Please enter a recipient."
 }

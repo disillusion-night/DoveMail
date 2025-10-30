@@ -218,4 +218,21 @@ public class MailboxScreen extends Screen {
     public void showInfoMessage(net.minecraft.network.chat.Component message) {
         this.infoMessage = message;
     }
+
+    // 替换全部摘要（用于服务器主动下发全量刷新时），不影响底部信息栏
+    public void replaceAllSummaries(java.util.List<MailSummary> summaries) {
+        this.mailSummaries.clear();
+        if (summaries != null) this.mailSummaries.addAll(summaries);
+        // 排序规则与构造一致：未读 System 优先，其次时间倒序
+        this.mailSummaries.sort((a, b) -> {
+            boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
+            boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
+            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            return Long.compare(b.getTimestamp(), a.getTimestamp());
+        });
+        // 当前页尽量保持，越界则夹取
+        int totalPages = Math.max((mailSummaries.size() + PAGE_SIZE - 1) / PAGE_SIZE, 1);
+        this.currentPage = net.minecraft.util.Mth.clamp(this.currentPage, 0, Math.max(totalPages - 1, 0));
+        updateButtonStates();
+    }
 }

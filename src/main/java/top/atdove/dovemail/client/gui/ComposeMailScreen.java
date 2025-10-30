@@ -82,7 +82,17 @@ public class ComposeMailScreen extends Screen {
         String to = toBox.getValue().trim();
         String subject = subjectBox.getValue().trim();
     String body = bodyArea.getValue().trim();
-        if (!to.isEmpty() && !subject.isEmpty()) {
+        if (to.isEmpty()) {
+            // 未填写收件人时给出提醒
+            showInfoMessage(Component.translatable("message.dovemail.compose.recipient_required"));
+            return;
+        }
+        if (subject.isEmpty()) {
+            // 未填写主题时给出提醒
+            showInfoMessage(Component.translatable("message.dovemail.compose.subject_required"));
+            return;
+        }
+        if (!to.isEmpty()) {
             DovemailNetwork.composeMail(to, subject, body, sendAsSystem, sendAsAnnouncement && sendAsSystem);
             // 不要立即关闭：等待服务器结果。若有错误，DovemailClientHooks 会将提示路由到本窗口底部信息栏。
         }
