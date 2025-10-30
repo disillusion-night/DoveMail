@@ -38,7 +38,7 @@ public final class ModNetwork {
     registrar.playToClient(
         top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload.STREAM_CODEC,
-        (payload, ctx) -> onClientOpenMailbox(payload, ctx)
+        ModNetwork::onClientOpenMailbox
     );
 
         // Serverbound
@@ -55,7 +55,12 @@ public final class ModNetwork {
     registrar.playToServer(
         top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ServerboundComposeMailPayload.STREAM_CODEC,
-        (payload, ctx) -> onServerComposeMail(payload, ctx)
+        ModNetwork::onServerComposeMail
+    );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.STREAM_CODEC,
+        (payload, ctx) -> onServerOpenMailbox(payload, ctx)
     );
 
         LOGGER.debug("[DoveMail] Payload registrar initialized and payloads registered");
@@ -82,6 +87,13 @@ public final class ModNetwork {
             var level = player.serverLevel();
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
             storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
+                if (!mail.isRead()) {
+                    mail.markRead();
+                    storage.setDirty();
+                    // 推送摘要更新
+                    var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+                    top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
+                }
                 var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
             });
@@ -108,6 +120,8 @@ public final class ModNetwork {
                 // 可以选择下发摘要更新，也可以仅下发详情刷新
                 var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
                 top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
+                var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
             });
         });
     }
@@ -142,6 +156,17 @@ public final class ModNetwork {
             top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(recipient, summaryPkt);
 
             sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", payload.recipientName()));
+        });
+    }
+
+    private static void onServerOpenMailbox(top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
+            var summaries = storage.getSummaries(player.getUUID());
+            var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
         });
     }
     // endregion

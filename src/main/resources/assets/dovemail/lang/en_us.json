@@ -20,4 +20,7 @@
   "button.dovemail.prevPage": "Prev Page",
   "button.dovemail.nextPage": "Next Page",
   "button.dovemail.compose": "Compose"
+  ,
+  "key.categories.dovemail": "DoveMail",
+  "key.dovemail.open_mailbox": "Open Mailbox"
 }

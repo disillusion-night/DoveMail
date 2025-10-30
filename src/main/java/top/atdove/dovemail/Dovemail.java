@@ -45,6 +45,8 @@ public class Dovemail {
         ModItems.register(modEventBus);
         ModTabs.register(modEventBus);
     ModNetwork.register(modEventBus);
+        // Client-only listeners (safe to register; only fire on client)
+        modEventBus.addListener(top.atdove.dovemail.client.DovemailClientInit::onRegisterKeyMappings);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Dovemail) to
@@ -55,6 +57,7 @@ public class Dovemail {
         NeoForge.EVENT_BUS.addListener(MailEvents::onPlayerLoggedIn);
     NeoForge.EVENT_BUS.addListener(top.atdove.dovemail.command.DovemailCommands::onRegisterCommands);
     NeoForge.EVENT_BUS.addListener(top.atdove.dovemail.command.DovemailTestCommands::onRegisterCommands);
+    NeoForge.EVENT_BUS.addListener(top.atdove.dovemail.client.DovemailClientInit::onClientTick);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);

@@ -25,4 +25,11 @@ public final class DovemailClientHooks {
         var mc = Minecraft.getInstance();
         mc.setScreen(new MailboxScreen.Builder().fromMails(summaries).build());
     }
+
+    public static void onMailSummaryReceived(MailSummary summary) {
+        var mc = Minecraft.getInstance();
+        if (mc.screen instanceof MailboxScreen screen) {
+            screen.updateOrAppendSummary(summary);
+        }
+    }
 }

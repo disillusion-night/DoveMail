@@ -164,4 +164,23 @@ public class MailboxScreen extends Screen {
             return new MailboxScreen(mails);
         }
     }
+
+    // 供客户端增量刷新列表时调用
+    public void updateOrAppendSummary(MailSummary summary) {
+        if (summary == null) return;
+        boolean replaced = false;
+        for (int i = 0; i < mailSummaries.size(); i++) {
+            if (mailSummaries.get(i).getId().equals(summary.getId())) {
+                mailSummaries.set(i, summary);
+                replaced = true;
+                break;
+            }
+        }
+        if (!replaced) {
+            mailSummaries.add(summary);
+        }
+        // 重新排序、更新分页按钮
+        mailSummaries.sort(Comparator.comparingLong(MailSummary::getTimestamp).reversed());
+        updateButtonStates();
+    }
 }
