@@ -31,6 +31,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import org.slf4j.Logger;
+import top.atdove.dovemail.mail.MailEvents;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Dovemail.MODID)
@@ -76,6 +77,7 @@ public class Dovemail {
         // Note that this is necessary if and only if we want *this* class (Dovemail) to respond directly to events.
         // Do not add this line if there are no @SubscribeEvent-annotated functions in this class, like onServerStarting() below.
         NeoForge.EVENT_BUS.register(this);
+    NeoForge.EVENT_BUS.addListener(MailEvents::onPlayerLoggedIn);
 
         // Register the item to a creative tab
         modEventBus.addListener(this::addCreative);
