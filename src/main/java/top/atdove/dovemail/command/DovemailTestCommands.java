@@ -18,6 +18,10 @@ public final class DovemailTestCommands {
     private DovemailTestCommands() {}
 
     public static void onRegisterCommands(RegisterCommandsEvent event) {
+        // Respect config toggle: do not register test commands unless enabled
+        if (!top.atdove.dovemail.Config.isEnableTestCommands()) {
+            return;
+        }
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("dovemailtest")

@@ -30,5 +30,7 @@
   "button.dovemail.delete_read": "Delete Read",
   "key.categories.dovemail": "DoveMail",
   "key.dovemail.open_mailbox": "Open Mailbox",
-  "message.dovemail.delete_read.result": "Deleted %s; skipped %s (unclaimed attachments)"
+  "message.dovemail.delete_read.result": "Deleted %s; skipped %s (unclaimed attachments)",
+  "message.dovemail.attachments.already_claimed": "Attachments already claimed.",
+  "message.dovemail.attachments.none": "No attachments to claim."
 }

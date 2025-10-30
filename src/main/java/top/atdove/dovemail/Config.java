@@ -26,10 +26,15 @@ public class Config {
         BUILDER.comment("Show a client toast/banner when player logs in and has unread mails.")
             .define("showUnreadToastOnLogin", true);
 
+    private static final ModConfigSpec.BooleanValue ENABLE_TEST_COMMANDS =
+        BUILDER.comment("Enable DoveMail test commands (server). Default: false")
+            .define("enableTestCommands", false);
+
     static final ModConfigSpec SPEC = BUILDER.build();
     // example items set removed
     private static boolean autoOpenMailboxOnLoginWhenUnread;
     private static boolean showUnreadToastOnLogin;
+    private static boolean enableTestCommands;
 
     // no-op: validation helpers removed
 
@@ -38,6 +43,7 @@ public class Config {
         // Dovemail settings
         autoOpenMailboxOnLoginWhenUnread = AUTO_OPEN_MAILBOX_ON_LOGIN_WHEN_UNREAD.get();
         showUnreadToastOnLogin = SHOW_UNREAD_TOAST_ON_LOGIN.get();
+        enableTestCommands = ENABLE_TEST_COMMANDS.get();
     }
 
     // Accessors
@@ -45,4 +51,5 @@ public class Config {
     // removed getItems()
     public static boolean isAutoOpenMailboxOnLoginWhenUnread() { return autoOpenMailboxOnLoginWhenUnread; }
     public static boolean isShowUnreadToastOnLogin() { return showUnreadToastOnLogin; }
+    public static boolean isEnableTestCommands() { return enableTestCommands; }
 }

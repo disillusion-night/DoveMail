@@ -39,5 +39,7 @@
   "message.dovemail.delete_read.result": "已删除 %s 封；跳过 %s 封（含未领取附件）",
 
   "message.dovemail.test.created": "已为你生成 %s 封测试邮件。",
-  "message.dovemail.test.cleared": "已清空你的收件箱。"
+  "message.dovemail.test.cleared": "已清空你的收件箱。",
+  "message.dovemail.attachments.already_claimed": "附件已领取。",
+  "message.dovemail.attachments.none": "没有可领取的附件。"
 }

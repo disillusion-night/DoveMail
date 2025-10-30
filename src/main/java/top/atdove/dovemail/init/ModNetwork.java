@@ -126,6 +126,16 @@ public final class ModNetwork {
             storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
                 // Idempotent guard: if already claimed or no attachments, just refresh detail and exit
                 if (mail.isAttachmentsClaimed() || mail.getAttachments().isEmpty()) {
+                    // Feedback message
+                    if (mail.isAttachmentsClaimed()) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                                "message.dovemail.attachments.already_claimed"
+                        ));
+                    } else if (mail.getAttachments().isEmpty()) {
+                        player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                                "message.dovemail.attachments.none"
+                        ));
+                    }
                     var detail0 = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
                     top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail0);
                     return;
