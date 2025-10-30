@@ -47,4 +47,17 @@ public final class DovemailClientHooks {
             mc.gui.setOverlayMessage(msg, false);
         }
     }
+
+    public static void onUiAlert(String key, java.util.List<String> args) {
+        var mc = Minecraft.getInstance();
+        Component msg;
+        if (args == null || args.isEmpty()) {
+            msg = Component.translatable(key);
+        } else {
+            Object[] arr = args.toArray(new Object[0]);
+            msg = Component.translatable(key, arr);
+        }
+        var current = mc.screen;
+        mc.setScreen(new top.atdove.dovemail.client.gui.ModalMessageScreen(current, msg));
+    }
 }

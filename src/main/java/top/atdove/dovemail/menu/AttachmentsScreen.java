@@ -3,7 +3,6 @@ package top.atdove.dovemail.menu;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import top.atdove.dovemail.client.gui.widgets.SimpleTextButton;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -18,15 +17,7 @@ public class AttachmentsScreen extends AbstractContainerScreen<AttachmentMenu> {
         this.imageHeight = 166;
     }
 
-    @Override
-    protected void init() {
-        super.init();
-        // Add a small 'X' close button at top-right of the container panel
-        int x = this.leftPos + this.imageWidth - 12;
-        int y = this.topPos - 12;
-    var closeButton = new SimpleTextButton(x, y, 12, 12, Component.literal("X"), b -> this.onClose());
-        addRenderableWidget(closeButton);
-    }
+    // no top-right close button; ESC will close and return to compose via onClose()
 
     @Override
     protected void renderBg(@Nonnull GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {

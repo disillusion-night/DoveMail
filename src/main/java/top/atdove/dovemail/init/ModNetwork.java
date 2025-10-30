@@ -46,6 +46,11 @@ public final class ModNetwork {
         ModNetwork::onClientUnreadHint
     );
     registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundUiAlertPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundUiAlertPayload.STREAM_CODEC,
+        ModNetwork::onClientUiAlert
+    );
+    registrar.playToClient(
         top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.PACKET_TYPE,
         top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.STREAM_CODEC,
         ModNetwork::onClientOpenMailDetail
@@ -105,6 +110,10 @@ public final class ModNetwork {
 
     private static void onClientOpenMailDetail(top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onOpenMailDetail(payload.summary(), payload.attachments()));
+    }
+
+    private static void onClientUiAlert(top.atdove.dovemail.network.payload.ClientboundUiAlertPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onUiAlert(payload.key(), payload.args()));
     }
 
     private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
