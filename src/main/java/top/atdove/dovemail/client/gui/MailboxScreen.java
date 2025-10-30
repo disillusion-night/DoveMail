@@ -61,18 +61,23 @@ public class MailboxScreen extends Screen {
                 Component.translatable("button.dovemail.nextPage"), b -> flipPage(1));
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
-        // Controls at top-right: Delete Read + Compose
-        int composeLeft = centerX + CARD_WIDTH / 2 - 80;
-        int deleteLeft = composeLeft - 85;
+    // Controls at top-right: Refresh + Delete Read + Compose
+    int composeLeft = centerX + CARD_WIDTH / 2 - 80;
+    int deleteLeft = composeLeft - 85;
+    int refreshLeft = deleteLeft - 85;
         var compose = new SimpleTextButton(composeLeft, 14, 80, 20, Component.translatable("button.dovemail.compose"),
                 b -> {
                     if (this.minecraft != null)
                         this.minecraft.setScreen(new ComposeMailScreen(this));
                 });
-        var deleteRead = new SimpleTextButton(deleteLeft, 14, 80, 20,
+    var deleteRead = new SimpleTextButton(deleteLeft, 14, 80, 20,
                 Component.translatable("button.dovemail.delete_read"),
                 b -> top.atdove.dovemail.network.DovemailNetwork.deleteReadMails());
+    var refresh = new SimpleTextButton(refreshLeft, 14, 80, 20,
+        Component.translatable("button.dovemail.refresh"),
+        b -> top.atdove.dovemail.network.DovemailNetwork.openMailbox());
         addRenderableWidget(deleteRead);
+    addRenderableWidget(refresh);
         addRenderableWidget(compose);
         // 初始化卡片渲染器（依赖 font 和时间格式化器）
         this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
