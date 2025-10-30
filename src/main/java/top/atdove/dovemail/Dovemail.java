@@ -20,6 +20,7 @@ import top.atdove.dovemail.mail.MailEvents;
 import top.atdove.dovemail.init.ModBlocks;
 import top.atdove.dovemail.init.ModItems;
 import top.atdove.dovemail.init.ModTabs;
+import top.atdove.dovemail.init.ModNetwork;
 
 // The value here should match an entry in the META-INF/neoforge.mods.toml file
 @Mod(Dovemail.MODID)
@@ -43,6 +44,7 @@ public class Dovemail {
         ModBlocks.register(modEventBus);
         ModItems.register(modEventBus);
         ModTabs.register(modEventBus);
+    ModNetwork.register(modEventBus);
 
         // Register ourselves for server and other game events we are interested in.
         // Note that this is necessary if and only if we want *this* class (Dovemail) to
