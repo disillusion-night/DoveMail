@@ -1,7 +1,6 @@
 package top.atdove.dovemail.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -50,30 +49,22 @@ public class ComposeMailScreen extends Screen {
     addRenderableWidget(bodyArea);
 
     y += areaHeight + 16;
-    Button attach = Button.builder(Component.translatable("button.dovemail.add_attachments"), btn -> {
-            // save current compose state then open attachments
-            top.atdove.dovemail.client.ComposeState.save(this.parent, toBox.getValue(), subjectBox.getValue(), bodyArea.getValue(), sendAsSystem, sendAsAnnouncement);
-            top.atdove.dovemail.network.DovemailNetwork.openAttachments();
-        })
-        .pos(panelLeft + 30, y)
-                .size(100, 20)
-                .build();
-    Button send = Button.builder(Component.translatable("screen.dovemail.compose.send"), btn -> doSend())
-        .pos(panelLeft + 140, y)
-                .size(100, 20)
-                .build();
-    Button cancel = Button.builder(Component.translatable("gui.cancel"), btn -> onClose())
-        .pos(panelLeft + 250, y)
-                .size(100, 20)
-                .build();
-    Button settings = Button.builder(Component.translatable("button.dovemail.settings"), btn -> openSettings())
-        .pos(panelLeft - 80, y)
-                .size(70, 20)
-                .build();
-        addRenderableWidget(attach);
-        addRenderableWidget(send);
-        addRenderableWidget(cancel);
-        addRenderableWidget(settings);
+    var attach = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 30, y, 100, 20,
+        Component.translatable("button.dovemail.add_attachments"), b -> {
+    // save current compose state then open attachments
+    top.atdove.dovemail.client.ComposeState.save(this.parent, toBox.getValue(), subjectBox.getValue(), bodyArea.getValue(), sendAsSystem, sendAsAnnouncement);
+    top.atdove.dovemail.network.DovemailNetwork.openAttachments();
+    });
+    var send = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 140, y, 100, 20,
+        Component.translatable("screen.dovemail.compose.send"), b -> doSend());
+    var cancel = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 250, y, 100, 20,
+        Component.translatable("gui.cancel"), b -> onClose());
+    var settings = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft - 80, y, 70, 20,
+        Component.translatable("button.dovemail.settings"), b -> openSettings());
+    addRenderableWidget(attach);
+    addRenderableWidget(send);
+    addRenderableWidget(cancel);
+    addRenderableWidget(settings);
 
         setInitialFocus(toBox);
 

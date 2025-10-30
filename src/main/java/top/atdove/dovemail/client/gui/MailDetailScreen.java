@@ -1,7 +1,7 @@
 package top.atdove.dovemail.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+import top.atdove.dovemail.client.gui.widgets.SimpleTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -27,7 +27,7 @@ public class MailDetailScreen extends Screen {
     private final List<ItemStack> attachments;
     private final Consumer<MailSummary> claimAction; // 回调由外部注入：负责发包并在服务端标记与发放
 
-    private Button claimButton;
+    private SimpleTextButton claimButton;
     private int scrollY = 0;
     private int maxScrollY = 0;
 
@@ -46,10 +46,8 @@ public class MailDetailScreen extends Screen {
         int btnWidth = 100;
         int btnHeight = 20;
         int btnY = this.height - PADDING - btnHeight - 14; // 留出发件人文字
-        claimButton = Button.builder(Component.translatable("button.dovemail.claim"), b -> onClaim())
-                .pos(this.width / 2 - btnWidth / 2, btnY)
-                .size(btnWidth, btnHeight)
-                .build();
+    claimButton = new SimpleTextButton(this.width / 2 - btnWidth / 2, btnY, btnWidth, btnHeight,
+        Component.translatable("button.dovemail.claim"), b -> onClaim());
         claimButton.active = canClaim;
         if (summary.hasAttachments()) {
             addRenderableWidget(claimButton);

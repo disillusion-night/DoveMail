@@ -3,24 +3,26 @@ package top.atdove.dovemail.client.gui.widgets;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nonnull;
+import java.util.function.Consumer;
 
 /**
  * 半透明背景 + 文本样式的简洁按钮。
  */
 public class SimpleTextButton extends AbstractButton {
-    private final OnPress onPress;
+    private final Consumer<SimpleTextButton> onPress;
 
-    public SimpleTextButton(int x, int y, int width, int height, Component message, OnPress onPress) {
+    public SimpleTextButton(int x, int y, int width, int height, Component message, Consumer<SimpleTextButton> onPress) {
         super(x, y, width, height, message);
         this.onPress = onPress;
     }
 
     @Override
     public void onPress() {
-        if (onPress != null) onPress.onPress(this);
+        if (onPress != null) onPress.accept(this);
     }
 
     @Override

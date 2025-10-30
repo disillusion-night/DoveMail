@@ -1,7 +1,7 @@
 package top.atdove.dovemail.client.gui;
 
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+import top.atdove.dovemail.client.gui.widgets.SimpleTextButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -28,8 +28,8 @@ public class MailboxScreen extends Screen {
 
     private final List<MailSummary> mailSummaries;
     private int currentPage;
-    private Button prevButton;
-    private Button nextButton;
+    private SimpleTextButton prevButton;
+    private SimpleTextButton nextButton;
     private MailCardRenderer cardRenderer;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
@@ -51,25 +51,19 @@ public class MailboxScreen extends Screen {
     int centerX = this.width / 2;
     int bottom = this.height - 28;
 
-    prevButton = Button.builder(Component.translatable("button.dovemail.prevPage"), btn -> flipPage(-1))
-        .pos(centerX - 110, bottom)
-        .size(80, 20)
-        .build();
-    nextButton = Button.builder(Component.translatable("button.dovemail.nextPage"), btn -> flipPage(1))
-        .pos(centerX + 30, bottom)
-        .size(80, 20)
-        .build();
+    prevButton = new SimpleTextButton(centerX - 110, bottom, 80, 20, Component.translatable("button.dovemail.prevPage"), b -> flipPage(-1));
+    nextButton = new SimpleTextButton(centerX + 30, bottom, 80, 20, Component.translatable("button.dovemail.nextPage"), b -> flipPage(1));
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
     // Controls at top-right: Delete Read + Compose
     int composeLeft = centerX + CARD_WIDTH / 2 - 80;
     int deleteLeft = composeLeft - 85;
-    Button compose = Button.builder(Component.translatable("button.dovemail.compose"), btn -> {
+    var compose = new SimpleTextButton(composeLeft, 14, 80, 20, Component.translatable("button.dovemail.compose"), b -> {
         if (this.minecraft != null) this.minecraft.setScreen(new ComposeMailScreen(this));
-    }).pos(composeLeft, 14).size(80, 20).build();
-    Button deleteRead = Button.builder(Component.translatable("button.dovemail.delete_read"), btn ->
+    });
+    var deleteRead = new SimpleTextButton(deleteLeft, 14, 80, 20, Component.translatable("button.dovemail.delete_read"), b ->
         top.atdove.dovemail.network.DovemailNetwork.deleteReadMails()
-    ).pos(deleteLeft, 14).size(80, 20).build();
+    );
     addRenderableWidget(deleteRead);
     addRenderableWidget(compose);
     // 初始化卡片渲染器（依赖 font 和时间格式化器）
