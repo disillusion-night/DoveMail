@@ -16,6 +16,12 @@ public class ComposeMailScreen extends Screen {
     private MultiLineTextArea bodyArea;
     private boolean sendAsSystem = false;
     private boolean sendAsAnnouncement = false;
+    // initial values for restoring from attachments
+    private String initialTo;
+    private String initialSubject;
+    private String initialBody;
+    private Boolean initialSystem;
+    private Boolean initialAnnouncement;
 
     public ComposeMailScreen(Screen parent) {
         super(Component.translatable("screen.dovemail.compose"));
@@ -44,7 +50,11 @@ public class ComposeMailScreen extends Screen {
     addRenderableWidget(bodyArea);
 
     y += areaHeight + 16;
-    Button attach = Button.builder(Component.translatable("button.dovemail.add_attachments"), btn -> top.atdove.dovemail.network.DovemailNetwork.openAttachments())
+    Button attach = Button.builder(Component.translatable("button.dovemail.add_attachments"), btn -> {
+            // save current compose state then open attachments
+            top.atdove.dovemail.client.ComposeState.save(this.parent, toBox.getValue(), subjectBox.getValue(), bodyArea.getValue(), sendAsSystem, sendAsAnnouncement);
+            top.atdove.dovemail.network.DovemailNetwork.openAttachments();
+        })
         .pos(panelLeft + 30, y)
                 .size(100, 20)
                 .build();
@@ -66,6 +76,13 @@ public class ComposeMailScreen extends Screen {
         addRenderableWidget(settings);
 
         setInitialFocus(toBox);
+
+        // apply initial values if present
+        if (initialTo != null) toBox.setValue(initialTo);
+        if (initialSubject != null) subjectBox.setValue(initialSubject);
+        if (initialBody != null) bodyArea.setValue(initialBody);
+        if (initialSystem != null) this.sendAsSystem = initialSystem;
+        if (initialAnnouncement != null) this.sendAsAnnouncement = initialAnnouncement;
     }
 
     private void doSend() {
@@ -90,6 +107,15 @@ public class ComposeMailScreen extends Screen {
     @Override
     public void renderBackground(@Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         this.renderTransparentBackground(g);
+    }
+
+    // called by ComposeState to pre-seed the UI
+    public void applyInitial(String to, String subject, String body, boolean asSystem, boolean asAnnouncement) {
+        this.initialTo = to;
+        this.initialSubject = subject;
+        this.initialBody = body;
+        this.initialSystem = asSystem;
+        this.initialAnnouncement = asAnnouncement;
     }
 
     @Override
