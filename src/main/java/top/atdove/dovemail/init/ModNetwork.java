@@ -98,65 +98,31 @@ public final class ModNetwork {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleUnreadHint(payload.count()));
     }
 
-    private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            var p = ctx.player();
-            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
-            // 服务端：读取存储，收集附件并下发详情
-            var level = player.serverLevel();
-            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
-                if (!mail.isRead()) {
-                    mail.markRead();
-                    storage.setDirty();
-                    // 推送摘要更新
-                    var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
-                    top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
-                }
-                var pkt = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), mail.getAttachments());
-                top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, pkt);
-            });
-        });
-    }
-
-    private static void onServerClaimAttachments(top.atdove.dovemail.network.payload.ServerboundClaimAttachmentsPayload payload, IPayloadContext ctx) {
-        ctx.enqueueWork(() -> {
-            var p = ctx.player();
-            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
-            var level = player.serverLevel();
-            var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-            storage.get(player.getUUID(), payload.mailId()).ifPresent(mail -> {
-                // 发放附件
-                var list = new java.util.ArrayList<>(mail.getAttachments());
-                for (var stack : list) {
-                    if (stack == null || stack.isEmpty()) continue;
-                    if (!player.getInventory().add(stack.copy())) {
-                        player.drop(stack.copy(), false);
-                    }
-                }
-                mail.markAttachmentsClaimed().markRead();
-                storage.setDirty();
-                // 可以选择下发摘要更新，也可以仅下发详情刷新
-                var detail = new top.atdove.dovemail.network.payload.ClientboundMailDetailPayload(mail.getId(), java.util.List.of());
-                top.atdove.dovemail.network.DovemailNetwork.sendDetailTo(player, detail);
-                var sumPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
-                top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(player, sumPkt);
-            });
-        });
-    }
-
     private static void onServerComposeMail(top.atdove.dovemail.network.payload.ServerboundComposeMailPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer sender)) return;
+            String target = payload.recipientName();
+
+            // 管理员群发：@a 在线所有玩家；* 所有已知玩家（含不在线）
+            if ("@a".equals(target)) {
+                handleBroadcastCompose(sender, payload.subject(), payload.body(), false);
+                return;
+            }
+            if ("*".equals(target)) {
+                handleBroadcastCompose(sender, payload.subject(), payload.body(), true);
+                return;
+            }
+
             var level = sender.serverLevel();
             var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
-
             var server = sender.server;
-            var maybeRecipient = resolveRecipient(server, storage, payload.recipientName());
+
+            // 普通单人发送逻辑（支持离线但已知的玩家）
+            var maybeRecipient = resolveRecipient(server, storage, target);
             if (maybeRecipient == null) {
                 sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-                        "message.dovemail.compose.recipient_not_found", payload.recipientName()
+                        "message.dovemail.compose.recipient_not_found", target
                 ));
                 return;
             }
@@ -181,11 +147,65 @@ public final class ModNetwork {
                 var summary = mail.toSummary();
                 var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(summary);
                 top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(maybeRecipient.online(), summaryPkt);
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", payload.recipientName()));
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent", target));
             } else {
-                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", payload.recipientName()));
+                sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.sent_offline", target));
             }
         });
+    }
+
+    private static void handleBroadcastCompose(net.minecraft.server.level.ServerPlayer sender, String subject, String body, boolean includeKnownOffline) {
+        if (!sender.hasPermissions(3)) {
+            sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.no_permission"));
+            return;
+        }
+        var level = sender.serverLevel();
+        var storage = top.atdove.dovemail.saveddata.MailStorage.get(level);
+        var server = sender.server;
+
+        // 一次取出附件（从发送者的附件容器）；对每个收件人复制副本
+        var baseAttachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);
+        java.util.function.Supplier<top.atdove.dovemail.mail.Mail> makeMail = () -> {
+            var m = new top.atdove.dovemail.mail.Mail();
+            m.setSubject(subject)
+             .setBodyPlain(body)
+             .setSenderName(sender.getGameProfile().getName())
+             .setTimestamp(System.currentTimeMillis())
+             .setRead(false)
+             .setAttachmentsClaimed(false);
+            if (!baseAttachments.isEmpty()) {
+                var copy = new java.util.ArrayList<net.minecraft.world.item.ItemStack>(baseAttachments.size());
+                for (var st : baseAttachments) copy.add(st.copy());
+                m.setAttachments(copy);
+            }
+            return m;
+        };
+
+        int onlineCount = 0;
+        int offlineCount = 0;
+
+        var onlinePlayers = server.getPlayerList().getPlayers();
+        var onlineSet = new java.util.HashSet<java.util.UUID>();
+        for (var op : onlinePlayers) {
+            onlineSet.add(op.getUUID());
+            var mail = makeMail.get();
+            storage.addOrUpdate(op.getUUID(), mail);
+            var summaryPkt = new top.atdove.dovemail.network.payload.ClientboundMailSummaryPayload(mail.toSummary());
+            top.atdove.dovemail.network.DovemailNetwork.sendSummaryTo(op, summaryPkt);
+            onlineCount++;
+        }
+
+        if (includeKnownOffline) {
+            for (var uuid : storage.getKnownPlayers()) {
+                if (onlineSet.contains(uuid)) continue;
+                storage.addOrUpdate(uuid, makeMail.get());
+                offlineCount++;
+            }
+        }
+
+        sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                "message.dovemail.compose.broadcast_result", onlineCount + offlineCount, onlineCount, offlineCount
+        ));
     }
 
     private record ResolvedRecipient(java.util.UUID uuid, net.minecraft.server.level.ServerPlayer online) {}
