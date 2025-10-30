@@ -50,14 +50,21 @@ public final class DovemailClientHooks {
 
     public static void onUiAlert(String key, java.util.List<String> args) {
         var mc = Minecraft.getInstance();
-        Component msg;
-        if (args == null || args.isEmpty()) {
-            msg = Component.translatable(key);
-        } else {
-            Object[] arr = args.toArray(new Object[0]);
-            msg = Component.translatable(key, arr);
+        Component msg = (args == null || args.isEmpty())
+                ? Component.translatable(key)
+                : Component.translatable(key, args.toArray());
+
+        if (mc.screen instanceof top.atdove.dovemail.client.gui.ComposeMailScreen compose) {
+            compose.showInfoMessage(msg);
+            return;
         }
-        var current = mc.screen;
-        mc.setScreen(new top.atdove.dovemail.client.gui.ModalMessageScreen(current, msg));
+        if (mc.screen instanceof top.atdove.dovemail.client.gui.MailboxScreen mailbox) {
+            mailbox.showInfoMessage(msg);
+            return;
+        }
+        // 兜底：不在收/发件界面时，使用覆盖消息以保证用户可见
+        if (mc.gui != null) {
+            mc.gui.setOverlayMessage(msg, false);
+        }
     }
 }

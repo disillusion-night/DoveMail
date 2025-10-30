@@ -31,6 +31,8 @@ public class MailboxScreen extends Screen {
     private SimpleTextButton prevButton;
     private SimpleTextButton nextButton;
     private MailCardRenderer cardRenderer;
+    // Inline info message area
+    private net.minecraft.network.chat.Component infoMessage;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
 
@@ -126,6 +128,14 @@ public class MailboxScreen extends Screen {
             guiGraphics.drawCenteredString(font, Component.translatable("screen.dovemail.mailbox.empty"), this.width / 2, this.height / 2 - 10, 0xAAAAAA);
         }
         renderPageIndicator(guiGraphics);
+
+        // bottom info message line above controls
+        if (infoMessage != null) {
+            int barHeight = 16;
+            int barTop = this.height - 28 - barHeight - 4; // above prev/next buttons
+            guiGraphics.fill(panelLeft + 1, barTop, panelRight - 1, barTop + barHeight, 0x44000000);
+            guiGraphics.drawCenteredString(font, infoMessage, this.width / 2, barTop + 4, 0xFFFFFF);
+        }
     }
 
     @Override
@@ -202,5 +212,10 @@ public class MailboxScreen extends Screen {
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });
         updateButtonStates();
+    }
+
+    // Called by client hook when server sends an inline alert
+    public void showInfoMessage(net.minecraft.network.chat.Component message) {
+        this.infoMessage = message;
     }
 }

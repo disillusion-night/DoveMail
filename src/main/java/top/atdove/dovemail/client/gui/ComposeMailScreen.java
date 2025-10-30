@@ -13,6 +13,8 @@ public class ComposeMailScreen extends Screen {
     private EditBox toBox;
     private EditBox subjectBox;
     private MultiLineTextArea bodyArea;
+    // Inline info message area
+    private Component infoMessage;
     private boolean sendAsSystem = false;
     private boolean sendAsAnnouncement = false;
     // initial values for restoring from attachments
@@ -126,7 +128,7 @@ public class ComposeMailScreen extends Screen {
         g.fill(panelLeft, panelTop, panelLeft + 1, panelBottom, 0x33FFFFFF);
         g.fill(panelLeft + panelWidth - 1, panelTop, panelLeft + panelWidth, panelBottom, 0x33000000);
 
-        g.drawCenteredString(font, this.title, centerX, panelTop + 8, 0xFFFFFF);
+    g.drawCenteredString(font, this.title, centerX, panelTop + 8, 0xFFFFFF);
         int labelLeft = panelLeft + 12;
         // Align labels vertically with actual widgets
         int toLabelY = toBox.getY() + (toBox.getHeight() - font.lineHeight) / 2;
@@ -145,6 +147,14 @@ public class ComposeMailScreen extends Screen {
         if (bodyArea.getValue().isEmpty()) {
             g.drawString(font, Component.literal("e.g. 今晚 8 点村口见"), bodyArea.getX() + 6, bodyArea.getY() + 6, 0x555555, false);
         }
+
+        // bottom info message line inside panel
+        if (infoMessage != null) {
+            int barHeight = 16;
+            int barTop = panelBottom - barHeight - 2;
+            g.fill(panelLeft + 1, barTop, panelLeft + panelWidth - 1, barTop + barHeight, 0x44000000);
+            g.drawCenteredString(font, infoMessage, centerX, barTop + 4, 0xFFFFFF);
+        }
     }
 
     @Override
@@ -152,5 +162,10 @@ public class ComposeMailScreen extends Screen {
         if (this.minecraft != null) {
             this.minecraft.setScreen(parent);
         }
+    }
+
+    // Called by client hook when server sends an inline alert
+    public void showInfoMessage(Component message) {
+        this.infoMessage = message;
     }
 }
