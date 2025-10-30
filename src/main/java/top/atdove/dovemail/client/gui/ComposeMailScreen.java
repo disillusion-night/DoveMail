@@ -145,7 +145,6 @@ public class ComposeMailScreen extends Screen {
         g.drawString(font, Component.translatable("screen.dovemail.compose.to"), labelLeft, toLabelY, 0xA0A0A0, false);
         int subjectLabelY = subjectBox.getY() + (subjectBox.getHeight() - font.lineHeight) / 2;
         g.drawString(font, Component.translatable("screen.dovemail.compose.subject"), labelLeft, subjectLabelY, 0xA0A0A0, false);
-    // 去掉“正文”标签显示
 
         // 占位提示（当输入框为空时）
         if (toBox.getValue().isEmpty()) {

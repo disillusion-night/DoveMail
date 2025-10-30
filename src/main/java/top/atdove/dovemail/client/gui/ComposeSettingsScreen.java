@@ -20,10 +20,10 @@ public class ComposeSettingsScreen extends Screen {
     private Checkbox announcementCheckbox;
 
     public ComposeSettingsScreen(Screen parent,
-                                 Consumer<Boolean> onSystemChanged,
-                                 Consumer<Boolean> onAnnouncementChanged,
-                                 boolean sendAsSystem,
-                                 boolean sendAsAnnouncement) {
+            Consumer<Boolean> onSystemChanged,
+            Consumer<Boolean> onAnnouncementChanged,
+            boolean sendAsSystem,
+            boolean sendAsAnnouncement) {
         super(Component.translatable("screen.dovemail.compose.settings"));
         this.parent = parent;
         this.onSystemChanged = onSystemChanged;
@@ -51,7 +51,8 @@ public class ComposeSettingsScreen extends Screen {
         addRenderableWidget(systemCheckbox);
         y += 24;
 
-        announcementCheckbox = Checkbox.builder(Component.translatable("option.dovemail.send_as_announcement"), this.font)
+        announcementCheckbox = Checkbox
+                .builder(Component.translatable("option.dovemail.send_as_announcement"), this.font)
                 .pos(centerX - 120, y)
                 .selected(sendAsAnnouncement)
                 .build();
@@ -78,8 +79,10 @@ public class ComposeSettingsScreen extends Screen {
     }
 
     private void applyAndClose() {
-        if (onSystemChanged != null) onSystemChanged.accept(systemCheckbox.selected());
-        if (onAnnouncementChanged != null) onAnnouncementChanged.accept(announcementCheckbox.selected());
+        if (onSystemChanged != null)
+            onSystemChanged.accept(systemCheckbox.selected());
+        if (onAnnouncementChanged != null)
+            onAnnouncementChanged.accept(announcementCheckbox.selected());
         onClose();
     }
 
@@ -91,10 +94,13 @@ public class ComposeSettingsScreen extends Screen {
     }
 
     @Override
-    public boolean isPauseScreen() { return false; }
+    public boolean isPauseScreen() {
+        return false;
+    }
 
     @Override
     public void onClose() {
-        if (this.minecraft != null) this.minecraft.setScreen(parent);
+        if (this.minecraft != null)
+            this.minecraft.setScreen(parent);
     }
 }

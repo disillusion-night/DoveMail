@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 简易邮件收件箱界面。
+ * 邮件收件箱界面。
  */
 public class MailboxScreen extends Screen {
     private static final String SYSTEM_SENDER = "System";
@@ -34,7 +34,8 @@ public class MailboxScreen extends Screen {
     // Inline info message area
     private net.minecraft.network.chat.Component infoMessage;
 
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm").withZone(ZoneId.systemDefault());
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            .withZone(ZoneId.systemDefault());
 
     public MailboxScreen(List<MailSummary> summaries) {
         super(Component.translatable("screen.dovemail.mailbox"));
@@ -42,7 +43,8 @@ public class MailboxScreen extends Screen {
         this.mailSummaries.sort((a, b) -> {
             boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
             boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
-            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            if (aSysUnread != bSysUnread)
+                return aSysUnread ? -1 : 1;
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });
     }
@@ -50,26 +52,30 @@ public class MailboxScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-    int centerX = this.width / 2;
-    int bottom = this.height - 28;
+        int centerX = this.width / 2;
+        int bottom = this.height - 28;
 
-    prevButton = new SimpleTextButton(centerX - 110, bottom, 80, 20, Component.translatable("button.dovemail.prevPage"), b -> flipPage(-1));
-    nextButton = new SimpleTextButton(centerX + 30, bottom, 80, 20, Component.translatable("button.dovemail.nextPage"), b -> flipPage(1));
+        prevButton = new SimpleTextButton(centerX - 110, bottom, 80, 20,
+                Component.translatable("button.dovemail.prevPage"), b -> flipPage(-1));
+        nextButton = new SimpleTextButton(centerX + 30, bottom, 80, 20,
+                Component.translatable("button.dovemail.nextPage"), b -> flipPage(1));
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
-    // Controls at top-right: Delete Read + Compose
-    int composeLeft = centerX + CARD_WIDTH / 2 - 80;
-    int deleteLeft = composeLeft - 85;
-    var compose = new SimpleTextButton(composeLeft, 14, 80, 20, Component.translatable("button.dovemail.compose"), b -> {
-        if (this.minecraft != null) this.minecraft.setScreen(new ComposeMailScreen(this));
-    });
-    var deleteRead = new SimpleTextButton(deleteLeft, 14, 80, 20, Component.translatable("button.dovemail.delete_read"), b ->
-        top.atdove.dovemail.network.DovemailNetwork.deleteReadMails()
-    );
-    addRenderableWidget(deleteRead);
-    addRenderableWidget(compose);
-    // 初始化卡片渲染器（依赖 font 和时间格式化器）
-    this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
+        // Controls at top-right: Delete Read + Compose
+        int composeLeft = centerX + CARD_WIDTH / 2 - 80;
+        int deleteLeft = composeLeft - 85;
+        var compose = new SimpleTextButton(composeLeft, 14, 80, 20, Component.translatable("button.dovemail.compose"),
+                b -> {
+                    if (this.minecraft != null)
+                        this.minecraft.setScreen(new ComposeMailScreen(this));
+                });
+        var deleteRead = new SimpleTextButton(deleteLeft, 14, 80, 20,
+                Component.translatable("button.dovemail.delete_read"),
+                b -> top.atdove.dovemail.network.DovemailNetwork.deleteReadMails());
+        addRenderableWidget(deleteRead);
+        addRenderableWidget(compose);
+        // 初始化卡片渲染器（依赖 font 和时间格式化器）
+        this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
         updateButtonStates();
     }
 
@@ -79,7 +85,8 @@ public class MailboxScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(@javax.annotation.Nonnull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(@javax.annotation.Nonnull GuiGraphics guiGraphics, int mouseX, int mouseY,
+            float partialTick) {
         this.renderTransparentBackground(guiGraphics);
     }
 
@@ -125,7 +132,8 @@ public class MailboxScreen extends Screen {
             y += CARD_HEIGHT + 4;
         }
         if (mailSummaries.isEmpty()) {
-            guiGraphics.drawCenteredString(font, Component.translatable("screen.dovemail.mailbox.empty"), this.width / 2, this.height / 2 - 10, 0xAAAAAA);
+            guiGraphics.drawCenteredString(font, Component.translatable("screen.dovemail.mailbox.empty"),
+                    this.width / 2, this.height / 2 - 10, 0xAAAAAA);
         }
         renderPageIndicator(guiGraphics);
 
@@ -152,7 +160,9 @@ public class MailboxScreen extends Screen {
             int bottom = top + CARD_HEIGHT;
             if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom) {
                 MailSummary summary = mailSummaries.get(i);
-                if (this.minecraft != null) this.minecraft.setScreen(new MailDetailScreen(this, summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
+                if (this.minecraft != null)
+                    this.minecraft.setScreen(new MailDetailScreen(this, summary, java.util.Collections.emptyList(),
+                            s -> DovemailNetwork.claimAttachments(s.getId())));
                 return true;
             }
             y += CARD_HEIGHT + 4;
@@ -165,8 +175,6 @@ public class MailboxScreen extends Screen {
         Component indicator = Component.literal((currentPage + 1) + "/" + totalPages);
         guiGraphics.drawCenteredString(font, indicator, this.width / 2, this.height - 44, 0xFFFFFF);
     }
-
-    
 
     public static class Builder {
         private final List<MailSummary> mails = new ArrayList<>();
@@ -192,7 +200,8 @@ public class MailboxScreen extends Screen {
 
     // 供客户端增量刷新列表时调用
     public void updateOrAppendSummary(MailSummary summary) {
-        if (summary == null) return;
+        if (summary == null)
+            return;
         boolean replaced = false;
         for (int i = 0; i < mailSummaries.size(); i++) {
             if (mailSummaries.get(i).getId().equals(summary.getId())) {
@@ -208,7 +217,8 @@ public class MailboxScreen extends Screen {
         mailSummaries.sort((a, b) -> {
             boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
             boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
-            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            if (aSysUnread != bSysUnread)
+                return aSysUnread ? -1 : 1;
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });
         updateButtonStates();
@@ -222,12 +232,14 @@ public class MailboxScreen extends Screen {
     // 替换全部摘要（用于服务器主动下发全量刷新时），不影响底部信息栏
     public void replaceAllSummaries(java.util.List<MailSummary> summaries) {
         this.mailSummaries.clear();
-        if (summaries != null) this.mailSummaries.addAll(summaries);
+        if (summaries != null)
+            this.mailSummaries.addAll(summaries);
         // 排序规则与构造一致：未读 System 优先，其次时间倒序
         this.mailSummaries.sort((a, b) -> {
             boolean aSysUnread = !a.read() && SYSTEM_SENDER.equals(a.getSenderName());
             boolean bSysUnread = !b.read() && SYSTEM_SENDER.equals(b.getSenderName());
-            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            if (aSysUnread != bSysUnread)
+                return aSysUnread ? -1 : 1;
             return Long.compare(b.getTimestamp(), a.getTimestamp());
         });
         // 当前页尽量保持，越界则夹取

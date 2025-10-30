@@ -11,7 +11,8 @@ import javax.annotation.Nonnull;
 
 public class MultiLineTextArea extends AbstractWidget {
     private final net.minecraft.client.gui.Font font;
-    private static final int LINE_SPACING = 2;
+    // Reduce extra space between lines so lines stack tightly without gaps
+    private static final int LINE_SPACING = 0;
     private final StringBuilder value = new StringBuilder();
     private int cursor = 0; // cursor index in value
     private int desiredColumn = -1; // track target column for up/down
