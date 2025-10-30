@@ -60,9 +60,20 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private int getLineOfIndex(int idx) { ensureLayout(); return getVisualLineOfIndex(idx); }
 
-    private int getColumnOfIndex(int idx) { ensureLayout(); int vline = getVisualLineOfIndex(idx); VisualLine vl = layout.get(Mth.clamp(vline, 0, Math.max(0, layout.size()-1))); int norm = normalizeIndexForLayout(idx); return norm - vl.start; }
+    private int getColumnOfIndex(int idx) {
+        ensureLayout();
+        int vline = getVisualLineOfIndex(idx);
+        VisualLine vl = layout.get(Mth.clamp(vline, 0, Math.max(0, layout.size() - 1)));
+        int norm = normalizeIndexForLayout(idx);
+        return norm - vl.start;
+    }
 
-    private int getIndexOfLineColumn(int line, int column) { ensureLayout(); VisualLine vl = layout.get(Mth.clamp(line, 0, Math.max(0, layout.size()-1))); int col = Mth.clamp(column, 0, vl.end - vl.start); return vl.start + col; }
+    private int getIndexOfLineColumn(int line, int column) {
+        ensureLayout();
+        VisualLine vl = layout.get(Mth.clamp(line, 0, Math.max(0, layout.size() - 1)));
+        int col = Mth.clamp(column, 0, vl.end - vl.start);
+        return vl.start + col;
+    }
 
     private void ensureCursorVisible() {
         int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
@@ -382,38 +393,20 @@ public class MultiLineTextArea extends AbstractWidget {
         layoutForValueHash = valHash;
         layout = new java.util.ArrayList<>();
         int i = 0;
-        while (i <= value.length()) {
-            if (i == value.length()) {
-                // allow caret at end even if string ends with newline
-                if (i > 0 && value.charAt(i - 1) == '\n') {
-                    layout.add(new VisualLine(i, i, ""));
-                }
-                break;
-            }
+        while (i < value.length()) {
             char c = value.charAt(i);
-            if (c == '\n') { // empty visual line between newlines
+            if (c == '\n') {
                 layout.add(new VisualLine(i, i, ""));
                 i++;
-                continue;
+            } else {
+                i = appendWrappedSegment(i, available);
             }
-            int start = i;
-            int end = i;
-            // grow until newline or width exceeds
-            while (end < value.length()) {
-                char ch = value.charAt(end);
-                if (ch == '\n') break;
-                String segment = value.substring(start, end + 1);
-                int w = font.width(segment);
-                if (w > available) {
-                    break;
-                }
-                end++;
-            }
-            if (end == start) { // fallback to ensure progress
-                end = Math.min(value.length(), start + 1);
-            }
-            layout.add(new VisualLine(start, end, value.substring(start, end)));
-            i = end;
+        }
+        // trailing empty line if text ends with newline
+        int len = value.length();
+        char last = len == 0 ? '\0' : value.charAt(len - 1);
+        if (last == '\n') {
+            layout.add(new VisualLine(len, len, ""));
         }
         if (layout.isEmpty()) {
             layout.add(new VisualLine(0, 0, ""));
@@ -421,6 +414,21 @@ public class MultiLineTextArea extends AbstractWidget {
         // clamp firstVisibleLine if needed
         int visibleLines = Math.max(1, (this.height - 4) / (font.lineHeight + LINE_SPACING));
         firstVisibleLine = Mth.clamp(firstVisibleLine, 0, Math.max(0, layout.size() - visibleLines));
+    }
+
+    private int appendWrappedSegment(int start, int available) {
+        int end = start;
+        while (end < value.length()) {
+            char ch = value.charAt(end);
+            boolean stop = (ch == '\n') || (font.width(value.substring(start, end + 1)) > available);
+            if (stop) break;
+            end++;
+        }
+        if (end == start) {
+            end = Math.min(value.length(), start + 1);
+        }
+        layout.add(new VisualLine(start, end, value.substring(start, end)));
+        return end;
     }
 
     private int normalizeIndexForLayout(int idx) {
