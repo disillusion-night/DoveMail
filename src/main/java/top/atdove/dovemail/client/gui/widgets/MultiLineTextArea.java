@@ -7,6 +7,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import javax.annotation.Nonnull;
 
 public class MultiLineTextArea extends AbstractWidget {
     private final net.minecraft.client.gui.Font font;
@@ -50,8 +51,10 @@ public class MultiLineTextArea extends AbstractWidget {
 
     public void append(String text) {
         if (text == null || text.isEmpty()) return;
-        value.insert(cursor, text);
-        cursor += text.length();
+        clampCursor();
+        int pos = Mth.clamp(cursor, 0, value.length());
+        value.insert(pos, text);
+        cursor = pos + text.length();
         ensureCursorVisible();
         invalidateLayout();
     }
@@ -84,7 +87,7 @@ public class MultiLineTextArea extends AbstractWidget {
     }
 
     @Override
-    protected void renderWidget(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    protected void renderWidget(@Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         // background
         int bg = this.isFocused() ? 0xAA000000 : 0x88000000;
         g.fill(getX(), getY(), getX() + width, getY() + height, bg);
@@ -274,7 +277,7 @@ public class MultiLineTextArea extends AbstractWidget {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput output) {
+    protected void updateWidgetNarration(@Nonnull NarrationElementOutput output) {
         defaultButtonNarrationText(output);
     }
 
@@ -284,6 +287,7 @@ public class MultiLineTextArea extends AbstractWidget {
     private void startOrExtendSelection() { if (!hasSelection()) { selectionStart = cursor; selectionEnd = cursor; } }
     private void selectAll() { selectionStart = 0; selectionEnd = value.length(); cursor = selectionEnd; ensureCursorVisible(); }
     private void deleteSelection() {
+        clampSelectionToBounds();
         int a = Math.min(selectionStart, selectionEnd);
         int b = Math.max(selectionStart, selectionEnd);
         value.delete(a, b);
@@ -294,6 +298,7 @@ public class MultiLineTextArea extends AbstractWidget {
     private void replaceSelectionIfAny() { if (hasSelection()) deleteSelection(); }
     private void copySelection() {
         if (!hasSelection()) return;
+        clampSelectionToBounds();
         int a = Math.min(selectionStart, selectionEnd);
         int b = Math.max(selectionStart, selectionEnd);
         String s = value.substring(a, b);
@@ -334,7 +339,8 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private void handleBackspace() {
         if (hasSelection()) { deleteSelection(); return; }
-        if (cursor > 0) {
+        clampCursor();
+        if (cursor > 0 && cursor <= value.length()) {
             value.deleteCharAt(cursor - 1);
             cursor--;
             ensureCursorVisible();
@@ -343,7 +349,8 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private void handleDelete() {
         if (hasSelection()) { deleteSelection(); return; }
-        if (cursor < value.length()) {
+        clampCursor();
+        if (cursor < value.length() && cursor >= 0) {
             value.deleteCharAt(cursor);
             ensureCursorVisible();
         }
@@ -351,6 +358,7 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private void moveLeft(boolean shift) {
         if (shift) startOrExtendSelection();
+        clampCursor();
         if (cursor > 0) cursor--;
         if (!shift) clearSelection();
         desiredColumn = -1;
@@ -359,6 +367,7 @@ public class MultiLineTextArea extends AbstractWidget {
 
     private void moveRight(boolean shift) {
         if (shift) startOrExtendSelection();
+        clampCursor();
         if (cursor < value.length()) cursor++;
         if (!shift) clearSelection();
         desiredColumn = -1;
@@ -384,6 +393,16 @@ public class MultiLineTextArea extends AbstractWidget {
 
     // Soft-wrap layout helpers
     private void invalidateLayout() { layoutForWidth = -1; layoutForValueHash = -1; layout = java.util.Collections.emptyList(); }
+
+    private void clampCursor() {
+        cursor = Mth.clamp(cursor, 0, value.length());
+    }
+
+    private void clampSelectionToBounds() {
+        int len = value.length();
+        if (selectionStart >= 0) selectionStart = Mth.clamp(selectionStart, 0, len);
+        if (selectionEnd >= 0) selectionEnd = Mth.clamp(selectionEnd, 0, len);
+    }
 
     private void ensureLayout() {
         int available = Math.max(1, this.width - H_PADDING * 2);
