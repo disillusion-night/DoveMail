@@ -34,6 +34,17 @@ public final class MailEvents {
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer, hint);
         }
 
+        // 公告邮件：优先自动弹出第一封未读公告
+        var allMails = storage.getAll(serverPlayer.getUUID());
+        for (var mail : allMails) {
+            if (!mail.isRead() && mail.isAnnouncement()) {
+                var summary = mail.toSummary();
+                var detailPkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload(summary, new java.util.ArrayList<>(mail.getAttachments()));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(serverPlayer, detailPkt);
+                break;
+            }
+        }
+
         // 如果开启了开关，则自动打开邮箱
         if (unread > 0 && top.atdove.dovemail.Config.isAutoOpenMailboxOnLoginWhenUnread()) {
             var summaries = storage.getSummaries(serverPlayer.getUUID());

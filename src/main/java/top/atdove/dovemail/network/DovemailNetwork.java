@@ -32,11 +32,11 @@ public final class DovemailNetwork {
         LOGGER.debug("[DoveMail] claimAttachments: {}", mailId);
     }
 
-    public static void composeMail(String recipientName, String subject, String body) {
+    public static void composeMail(String recipientName, String subject, String body, boolean asSystem, boolean asAnnouncement) {
         net.neoforged.neoforge.network.PacketDistributor.sendToServer(
-                new top.atdove.dovemail.network.payload.ServerboundComposeMailPayload(recipientName, subject, body)
+                new top.atdove.dovemail.network.payload.ServerboundComposeMailPayload(recipientName, subject, body, asSystem, asAnnouncement)
         );
-        LOGGER.debug("[DoveMail] composeMail to={} subject={}", recipientName, subject);
+        LOGGER.debug("[DoveMail] composeMail to={} subject={} asSystem={} announce={}", recipientName, subject, asSystem, asAnnouncement);
     }
 
     public static void openMailbox() {

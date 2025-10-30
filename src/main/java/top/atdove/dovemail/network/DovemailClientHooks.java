@@ -32,6 +32,11 @@ public final class DovemailClientHooks {
         }
     }
 
+    public static void onOpenMailDetail(MailSummary summary, java.util.List<ItemStack> attachments) {
+        var mc = Minecraft.getInstance();
+        mc.setScreen(new MailDetailScreen(summary, attachments, s -> DovemailNetwork.claimAttachments(s.getId())));
+    }
+
     public static void onUnreadHint(int count) {
         if (!top.atdove.dovemail.Config.isShowUnreadToastOnLogin()) {
             return;

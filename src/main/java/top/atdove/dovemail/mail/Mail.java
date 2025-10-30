@@ -41,6 +41,7 @@ public class Mail {
     public static final String KEY_TIMESTAMP = "timestamp";
     public static final String KEY_READ = "read";
     public static final String KEY_ATTACHMENTS_CLAIMED = "attachments_claimed";
+    public static final String KEY_ANNOUNCEMENT = "announcement";
 
     private UUID id;
     private String subject;
@@ -52,6 +53,7 @@ public class Mail {
     private long timestamp;
     private boolean read;
     private boolean attachmentsClaimed;
+    private boolean announcement;
 
     public Mail() {
         this.id = UUID.randomUUID();
@@ -59,6 +61,7 @@ public class Mail {
         this.bodyJson = componentToJson(Component.empty());
         this.read = false;
         this.attachmentsClaimed = false;
+    this.announcement = false;
     }
 
     public Mail(UUID id, String subject, String body, UUID senderUuid, String senderName,
@@ -73,6 +76,7 @@ public class Mail {
         this.timestamp = timestamp > 0 ? timestamp : System.currentTimeMillis();
         this.read = false;
         this.attachmentsClaimed = false;
+    this.announcement = false;
     }
 
     // 序列化为 NBT（需要 HolderLookup.Provider）
@@ -87,6 +91,7 @@ public class Mail {
         }
         tag.putBoolean(KEY_READ, read);
         tag.putBoolean(KEY_ATTACHMENTS_CLAIMED, attachmentsClaimed);
+    tag.putBoolean(KEY_ANNOUNCEMENT, announcement);
 
         CompoundTag sender = new CompoundTag();
         if (senderUuid != null) sender.putUUID(KEY_SENDER_UUID, senderUuid);
@@ -128,6 +133,7 @@ public class Mail {
         mail.bodyJson = normalizeToJsonComponent(rawBody);
     mail.read = tag.contains(KEY_READ, Tag.TAG_BYTE) && tag.getBoolean(KEY_READ);
     mail.attachmentsClaimed = tag.contains(KEY_ATTACHMENTS_CLAIMED, Tag.TAG_BYTE) && tag.getBoolean(KEY_ATTACHMENTS_CLAIMED);
+    mail.announcement = tag.contains(KEY_ANNOUNCEMENT, Tag.TAG_BYTE) && tag.getBoolean(KEY_ANNOUNCEMENT);
 
         if (tag.contains(KEY_SENDER, Tag.TAG_COMPOUND)) {
             CompoundTag s = tag.getCompound(KEY_SENDER);
@@ -172,6 +178,7 @@ public class Mail {
     public long getTimestamp() { return timestamp; }
     public boolean isRead() { return read; }
     public boolean isAttachmentsClaimed() { return attachmentsClaimed; }
+    public boolean isAnnouncement() { return announcement; }
 
     public Mail setSubject(String subject) {
         this.subject = subject;
@@ -225,6 +232,11 @@ public class Mail {
 
     public Mail setAttachmentsClaimed(boolean attachmentsClaimed) {
         this.attachmentsClaimed = attachmentsClaimed;
+        return this;
+    }
+
+    public Mail setAnnouncement(boolean announcement) {
+        this.announcement = announcement;
         return this;
     }
 

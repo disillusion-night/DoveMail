@@ -72,6 +72,16 @@ public class MailboxScreen extends Screen {
         updateButtonStates();
     }
 
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public void renderBackground(@javax.annotation.Nonnull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderTransparentBackground(guiGraphics);
+    }
+
     private void updateButtonStates() {
         int totalPages = Math.max((mailSummaries.size() + PAGE_SIZE - 1) / PAGE_SIZE, 1);
         prevButton.active = currentPage > 0;
@@ -185,8 +195,13 @@ public class MailboxScreen extends Screen {
         if (!replaced) {
             mailSummaries.add(summary);
         }
-        // 重新排序、更新分页按钮
-        mailSummaries.sort(Comparator.comparingLong(MailSummary::getTimestamp).reversed());
+        // 重新排序、更新分页按钮（未读 System 优先，其次按时间倒序）
+        mailSummaries.sort((a, b) -> {
+            boolean aSysUnread = !a.read() && "System".equals(a.getSenderName());
+            boolean bSysUnread = !b.read() && "System".equals(b.getSenderName());
+            if (aSysUnread != bSysUnread) return aSysUnread ? -1 : 1;
+            return Long.compare(b.getTimestamp(), a.getTimestamp());
+        });
         updateButtonStates();
     }
 }

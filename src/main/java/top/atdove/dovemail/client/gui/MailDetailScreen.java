@@ -59,6 +59,16 @@ public class MailDetailScreen extends Screen {
         DovemailNetwork.requestMailDetail(summary.getId());
     }
 
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public void renderBackground(@javax.annotation.Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        this.renderTransparentBackground(g);
+    }
+
     private void onClaim() {
         if (claimAction != null) {
             claimAction.accept(summary);
@@ -71,7 +81,7 @@ public class MailDetailScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(@javax.annotation.Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
 

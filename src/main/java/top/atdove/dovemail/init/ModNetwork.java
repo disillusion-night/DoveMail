@@ -45,6 +45,11 @@ public final class ModNetwork {
         top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload.STREAM_CODEC,
         ModNetwork::onClientUnreadHint
     );
+    registrar.playToClient(
+        top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload.STREAM_CODEC,
+        ModNetwork::onClientOpenMailDetail
+    );
 
         // Serverbound
     registrar.playToServer(
@@ -96,6 +101,10 @@ public final class ModNetwork {
 
     private static void onClientUnreadHint(top.atdove.dovemail.network.payload.ClientboundUnreadHintPayload payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailNetwork.handleUnreadHint(payload.count()));
+    }
+
+    private static void onClientOpenMailDetail(top.atdove.dovemail.network.payload.ClientboundOpenMailDetailPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> top.atdove.dovemail.network.DovemailClientHooks.onOpenMailDetail(payload.summary(), payload.attachments()));
     }
 
     private static void onServerRequestMailDetail(top.atdove.dovemail.network.payload.ServerboundRequestMailDetailPayload payload, IPayloadContext ctx) {
@@ -167,6 +176,8 @@ public final class ModNetwork {
             var p = ctx.player();
             if (!(p instanceof net.minecraft.server.level.ServerPlayer sender)) return;
             String target = payload.recipientName();
+            boolean asSystem = payload.asSystem();
+            boolean asAnnouncement = payload.asAnnouncement();
 
             // 管理员群发：@a 在线所有玩家；* 所有已知玩家（含不在线）
             if ("@a".equals(target)) {
@@ -198,6 +209,18 @@ public final class ModNetwork {
                 .setTimestamp(System.currentTimeMillis())
                 .setRead(false)
                 .setAttachmentsClaimed(false);
+
+            // 权限与 System/公告设置：仅权限级别>=3 才能以 System 身份发送；公告仅在以 System 身份时生效
+            if (asSystem) {
+                if (sender.hasPermissions(3)) {
+                    mail.setSenderName("System");
+                    if (asAnnouncement) {
+                        mail.setAnnouncement(true);
+                    }
+                } else {
+                    sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.dovemail.compose.no_permission"));
+                }
+            }
 
             // 将玩家附件容器中的物品作为邮件附件并清空容器
             var attachments = top.atdove.dovemail.menu.AttachmentManager.consume(sender);

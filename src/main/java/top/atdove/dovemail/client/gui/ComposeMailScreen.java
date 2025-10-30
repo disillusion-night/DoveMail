@@ -14,6 +14,8 @@ public class ComposeMailScreen extends Screen {
     private EditBox toBox;
     private EditBox subjectBox;
     private MultiLineTextArea bodyArea;
+    private boolean sendAsSystem = false;
+    private boolean sendAsAnnouncement = false;
 
     public ComposeMailScreen(Screen parent) {
         super(Component.translatable("screen.dovemail.compose"));
@@ -54,9 +56,14 @@ public class ComposeMailScreen extends Screen {
         .pos(panelLeft + 250, y)
                 .size(100, 20)
                 .build();
+    Button settings = Button.builder(Component.translatable("button.dovemail.settings"), btn -> openSettings())
+        .pos(panelLeft - 80, y)
+                .size(70, 20)
+                .build();
         addRenderableWidget(attach);
         addRenderableWidget(send);
         addRenderableWidget(cancel);
+        addRenderableWidget(settings);
 
         setInitialFocus(toBox);
     }
@@ -66,9 +73,23 @@ public class ComposeMailScreen extends Screen {
         String subject = subjectBox.getValue().trim();
     String body = bodyArea.getValue().trim();
         if (!to.isEmpty() && !subject.isEmpty()) {
-            DovemailNetwork.composeMail(to, subject, body);
+            DovemailNetwork.composeMail(to, subject, body, sendAsSystem, sendAsAnnouncement && sendAsSystem);
             onClose();
         }
+    }
+
+    private void openSettings() {
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(new ComposeSettingsScreen(this, value -> this.sendAsSystem = value, value -> this.sendAsAnnouncement = value, sendAsSystem, sendAsAnnouncement));
+        }
+    }
+
+    @Override
+    public boolean isPauseScreen() { return false; }
+
+    @Override
+    public void renderBackground(@Nonnull GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        this.renderTransparentBackground(g);
     }
 
     @Override
