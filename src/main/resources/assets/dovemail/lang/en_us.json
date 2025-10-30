@@ -22,8 +22,9 @@
   "message.dovemail.inbox.unread_on_login": "You have %s unread mails.",
   "button.dovemail.prevPage": "Prev Page",
   "button.dovemail.nextPage": "Next Page",
-  "button.dovemail.compose": "Compose"
-  ,
+  "button.dovemail.compose": "Compose",
+  "button.dovemail.delete_read": "Delete Read",
   "key.categories.dovemail": "DoveMail",
-  "key.dovemail.open_mailbox": "Open Mailbox"
+  "key.dovemail.open_mailbox": "Open Mailbox",
+  "message.dovemail.delete_read.result": "Deleted %s; skipped %s (unclaimed attachments)"
 }

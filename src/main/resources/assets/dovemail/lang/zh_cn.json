@@ -28,8 +28,11 @@
   "button.dovemail.prevPage": "上一页",
   "button.dovemail.nextPage": "下一页",
   "button.dovemail.compose": "写邮件",
+  "button.dovemail.delete_read": "删除已读",
   "key.categories.dovemail": "DoveMail",
   "key.dovemail.open_mailbox": "打开信箱",
+
+  "message.dovemail.delete_read.result": "已删除 %s 封；跳过 %s 封（含未领取附件）",
 
   "message.dovemail.test.created": "已为你生成 %s 封测试邮件。",
   "message.dovemail.test.cleared": "已清空你的收件箱。"

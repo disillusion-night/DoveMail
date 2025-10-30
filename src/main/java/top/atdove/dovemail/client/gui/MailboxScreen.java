@@ -56,10 +56,16 @@ public class MailboxScreen extends Screen {
         .build();
         addRenderableWidget(prevButton);
         addRenderableWidget(nextButton);
-    // Compose button at top-right of the list
-    Button compose = Button.builder(Component.translatable("button.dovemail.compose"), btn ->
-        this.minecraft.setScreen(new ComposeMailScreen(this))
-    ).pos(centerX + CARD_WIDTH / 2 - 80, 14).size(80, 20).build();
+    // Controls at top-right: Delete Read + Compose
+    int composeLeft = centerX + CARD_WIDTH / 2 - 80;
+    int deleteLeft = composeLeft - 85;
+    Button compose = Button.builder(Component.translatable("button.dovemail.compose"), btn -> {
+        if (this.minecraft != null) this.minecraft.setScreen(new ComposeMailScreen(this));
+    }).pos(composeLeft, 14).size(80, 20).build();
+    Button deleteRead = Button.builder(Component.translatable("button.dovemail.delete_read"), btn ->
+        top.atdove.dovemail.network.DovemailNetwork.deleteReadMails()
+    ).pos(deleteLeft, 14).size(80, 20).build();
+    addRenderableWidget(deleteRead);
     addRenderableWidget(compose);
     // 初始化卡片渲染器（依赖 font 和时间格式化器）
     this.cardRenderer = new MailCardRenderer(CARD_WIDTH, CARD_HEIGHT, ICON_SIZE, this.font, timeFormatter);
@@ -79,7 +85,7 @@ public class MailboxScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@javax.annotation.Nonnull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
@@ -127,7 +133,7 @@ public class MailboxScreen extends Screen {
             int bottom = top + CARD_HEIGHT;
             if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom) {
                 MailSummary summary = mailSummaries.get(i);
-                this.minecraft.setScreen(new MailDetailScreen(summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
+                if (this.minecraft != null) this.minecraft.setScreen(new MailDetailScreen(summary, java.util.Collections.emptyList(), s -> DovemailNetwork.claimAttachments(s.getId())));
                 return true;
             }
             y += CARD_HEIGHT + 4;

@@ -67,6 +67,11 @@ public final class ModNetwork {
         top.atdove.dovemail.network.payload.ServerboundOpenMailboxPayload.STREAM_CODEC,
         ModNetwork::onServerOpenMailbox
     );
+    registrar.playToServer(
+        top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload.PACKET_TYPE,
+        top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload.STREAM_CODEC,
+        ModNetwork::onServerDeleteReadMails
+    );
 
         LOGGER.debug("[DoveMail] Payload registrar initialized and payloads registered");
     }
@@ -206,6 +211,42 @@ public final class ModNetwork {
             var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
         });
+    }
+
+    private static void onServerDeleteReadMails(top.atdove.dovemail.network.payload.ServerboundDeleteReadMailsPayload payload, IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            var p = ctx.player();
+            if (!(p instanceof net.minecraft.server.level.ServerPlayer player)) return;
+            var result = deleteReadForPlayer(player);
+            // 刷新邮箱摘要
+            var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
+            var summaries = storage.getSummaries(player.getUUID());
+            var pkt = new top.atdove.dovemail.network.payload.ClientboundOpenMailboxPayload(summaries);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, pkt);
+            // 反馈结果
+            player.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
+                "message.dovemail.delete_read.result", result.deleted(), result.skipped()
+            ));
+        });
+    }
+
+    private record DeleteResult(int deleted, int skipped) {}
+
+    private static DeleteResult deleteReadForPlayer(net.minecraft.server.level.ServerPlayer player) {
+        var storage = top.atdove.dovemail.saveddata.MailStorage.get(player.serverLevel());
+        var all = new java.util.ArrayList<>(storage.getAll(player.getUUID()));
+        int deleted = 0;
+        int skipped = 0;
+        for (var mail : all) {
+            boolean shouldDelete = mail.isRead() && (mail.getAttachments().isEmpty() || mail.isAttachmentsClaimed());
+            if (shouldDelete) {
+                if (storage.remove(player.getUUID(), mail.getId())) deleted++;
+            } else if (mail.isRead()) {
+                // read but has unclaimed attachments
+                skipped++;
+            }
+        }
+        return new DeleteResult(deleted, skipped);
     }
     // endregion
 }
