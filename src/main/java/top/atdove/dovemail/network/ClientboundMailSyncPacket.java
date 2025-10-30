@@ -2,13 +2,11 @@ package top.atdove.dovemail.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.ComponentSerialization;
-import net.neoforged.neoforge.network.NetworkEvent;
 import top.atdove.dovemail.mail.MailSummary;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * 从服务器同步收件箱数据到客户端。
@@ -49,11 +47,5 @@ public class ClientboundMailSyncPacket {
             buf.writeBoolean(summary.isRead());
             buf.writeBoolean(summary.isAttachmentsClaimed());
         }
-    }
-
-    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> ClientInboxCache.update(summaries));
-        context.setPacketHandled(true);
     }
 }
