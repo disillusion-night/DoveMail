@@ -27,6 +27,7 @@ public class MailboxScreen extends Screen {
     private static final int CARD_SPACING = 4;
     // 整体上移偏移量（像素），用于改善整体视觉均衡
     private static final int VERTICAL_SHIFT_UP = 12;
+    private static final int PANEL_SIDE_PADDING = 16;
 
     private final List<MailSummary> mailSummaries;
     private int currentPage;
@@ -56,8 +57,8 @@ public class MailboxScreen extends Screen {
         super.init();
     int centerX = this.width / 2;
     // 面板区域用于定位箭头与刷新按钮（高度随每页展示数量动态变化）
-    int panelLeft = centerX - CARD_WIDTH / 2 - 10;
-    int panelRight = centerX + CARD_WIDTH / 2 + 10;
+    int panelLeft = centerX - CARD_WIDTH / 2 - PANEL_SIDE_PADDING;
+    int panelRight = centerX + CARD_WIDTH / 2 + PANEL_SIDE_PADDING;
     int basePanelTop = 34;
     int panelTop = Math.max(12, basePanelTop - VERTICAL_SHIFT_UP);
     int listTopInit = Math.max(panelTop + 10, LIST_TOP_PADDING - VERTICAL_SHIFT_UP);
