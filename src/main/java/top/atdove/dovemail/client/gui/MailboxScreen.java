@@ -22,9 +22,11 @@ public class MailboxScreen extends Screen {
     private static final String SYSTEM_SENDER = "System";
     private static final int LIST_TOP_PADDING = 50;
     private static final int CARD_HEIGHT = 42;
-    private static final int CARD_WIDTH = 260;
+    private static final int CARD_WIDTH = 252; // 原 260：两侧各缩小 4px，总计缩小 8px
     private static final int ICON_SIZE = 20;
     private static final int CARD_SPACING = 4;
+    // 整体上移偏移量（像素），用于改善整体视觉均衡
+    private static final int VERTICAL_SHIFT_UP = 12;
 
     private final List<MailSummary> mailSummaries;
     private int currentPage;
@@ -56,12 +58,14 @@ public class MailboxScreen extends Screen {
     // 面板区域用于定位箭头与刷新按钮（高度随每页展示数量动态变化）
     int panelLeft = centerX - CARD_WIDTH / 2 - 10;
     int panelRight = centerX + CARD_WIDTH / 2 + 10;
-    int panelTop = 34;
+    int basePanelTop = 34;
+    int panelTop = Math.max(12, basePanelTop - VERTICAL_SHIFT_UP);
+    int listTopInit = Math.max(panelTop + 10, LIST_TOP_PADDING - VERTICAL_SHIFT_UP);
     int pageSlotsInit = getPageSize();
-    int marginInit = LIST_TOP_PADDING - panelTop;
+    int marginInit = listTopInit - panelTop;
     int listHeightInit = pageSlotsInit * CARD_HEIGHT + Math.max(0, pageSlotsInit - 1) * CARD_SPACING;
     int infoBarHeightInit = this.font.lineHeight + 6; // reserve one line height for info bar
-    int panelBottom = LIST_TOP_PADDING + listHeightInit + infoBarHeightInit + marginInit;
+    int panelBottom = listTopInit + listHeightInit + infoBarHeightInit + marginInit;
 
     // 左右翻页箭头：位于收件箱面板左右两侧内部，垂直居中
     int arrowSize = 16;
@@ -129,16 +133,18 @@ public class MailboxScreen extends Screen {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-    // 顶部标题与背景面板（高度根据每页展示数量动态渲染，预留一行用于提示）
+    // 顶部标题与背景面板（高度根据每页展示数量动态渲染，预留一行用于提示），整体上移
     int centerX = this.width / 2;
     int panelLeft = centerX - CARD_WIDTH / 2 - 10;
     int panelRight = centerX + CARD_WIDTH / 2 + 10;
-    int panelTop = 34;
+    int basePanelTopR = 34;
+    int panelTop = Math.max(12, basePanelTopR - VERTICAL_SHIFT_UP);
+    int listTopRender = Math.max(panelTop + 10, LIST_TOP_PADDING - VERTICAL_SHIFT_UP);
     int pageSlotsRender = getPageSize();
-    int marginRender = LIST_TOP_PADDING - panelTop;
+    int marginRender = listTopRender - panelTop;
     int listHeightRender = pageSlotsRender * CARD_HEIGHT + Math.max(0, pageSlotsRender - 1) * CARD_SPACING;
     int infoBarHeight = this.font.lineHeight + 6;
-    int panelBottom = LIST_TOP_PADDING + listHeightRender + infoBarHeight + marginRender;
+    int panelBottom = listTopRender + listHeightRender + infoBarHeight + marginRender;
         // 背景面板（半透明）
         guiGraphics.fill(panelLeft, panelTop, panelRight, panelBottom, 0x66000000);
         // 边框
@@ -149,10 +155,10 @@ public class MailboxScreen extends Screen {
 
         guiGraphics.drawCenteredString(font, this.title, this.width / 2, 10, 0xFFFFFF);
 
-        int pageSize = getPageSize();
-        int startIndex = currentPage * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, mailSummaries.size());
-        int y = LIST_TOP_PADDING;
+    int pageSize = getPageSize();
+    int startIndex = currentPage * pageSize;
+    int endIndex = Math.min(startIndex + pageSize, mailSummaries.size());
+    int y = listTopRender;
         for (int i = startIndex; i < endIndex; i++) {
             MailSummary summary = mailSummaries.get(i);
             cardRenderer.renderEntry(guiGraphics, this.width / 2, y, summary, i, mouseX, mouseY);
@@ -180,7 +186,9 @@ public class MailboxScreen extends Screen {
     int pageSize2 = getPageSize();
     int startIndex = currentPage * pageSize2;
     int endIndex = Math.min(startIndex + pageSize2, mailSummaries.size());
-        int y = LIST_TOP_PADDING;
+    int basePanelTopClick = 34;
+    int panelTopClick = Math.max(12, basePanelTopClick - VERTICAL_SHIFT_UP);
+    int y = Math.max(panelTopClick + 10, LIST_TOP_PADDING - VERTICAL_SHIFT_UP);
         int centerX = this.width / 2;
         int left = centerX - CARD_WIDTH / 2;
         int right = centerX + CARD_WIDTH / 2;
