@@ -13,6 +13,22 @@ import java.util.UUID;
 public final class DovemailClientHooks {
     private DovemailClientHooks() {}
 
+    // Schedules
+    private static volatile long mailboxRefreshAtMs = 0L;
+
+    public static void scheduleMailboxRefresh(long delayMs) {
+        mailboxRefreshAtMs = System.currentTimeMillis() + Math.max(0L, delayMs);
+    }
+
+    public static boolean tryConsumeDueMailboxRefresh() {
+        long due = mailboxRefreshAtMs;
+        if (due > 0L && System.currentTimeMillis() >= due) {
+            mailboxRefreshAtMs = 0L;
+            return true;
+        }
+        return false;
+    }
+
     public static void onMailDetailReceived(UUID mailId, List<ItemStack> attachments) {
         var mc = Minecraft.getInstance();
         if (mc.screen instanceof MailDetailScreen screen && screen.getMailId().equals(mailId)) {
@@ -75,6 +91,8 @@ public final class DovemailClientHooks {
                 compose.onClose();
                 if (mc.screen instanceof top.atdove.dovemail.client.gui.MailboxScreen mailbox) {
                     mailbox.showInfoMessage(msg);
+                    // 500ms 后主动刷新一次收件箱
+                    scheduleMailboxRefresh(500L);
                 } else if (mc.gui != null) {
                     mc.gui.setOverlayMessage(msg, false);
                 }

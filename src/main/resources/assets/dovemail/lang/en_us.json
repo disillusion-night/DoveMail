@@ -28,6 +28,7 @@
   "button.dovemail.nextPage": "Next Page",
   "button.dovemail.compose": "Compose",
   "button.dovemail.delete_read": "Delete Read",
+  "button.dovemail.refresh": "Refresh",
   "key.categories.dovemail": "DoveMail",
   "key.dovemail.open_mailbox": "Open Mailbox",
   "message.dovemail.delete_read.result": "Deleted %s; skipped %s (unclaimed attachments)",

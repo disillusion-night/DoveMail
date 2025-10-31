@@ -35,6 +35,7 @@
   "button.dovemail.nextPage": "下一页",
   "button.dovemail.compose": "写邮件",
   "button.dovemail.delete_read": "删除已读",
+  "button.dovemail.refresh": "刷新",
   "key.categories.dovemail": "DoveMail",
   "key.dovemail.open_mailbox": "打开信箱",
 

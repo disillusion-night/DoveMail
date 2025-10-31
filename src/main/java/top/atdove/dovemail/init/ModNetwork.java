@@ -302,9 +302,11 @@ public final class ModNetwork {
         int onlineCount = distributeToOnline(storage, makeMail, onlinePlayers, onlineSet);
         int offlineCount = includeKnownOffline ? distributeToOffline(storage, makeMail, onlineSet) : 0;
 
-        sender.sendSystemMessage(net.minecraft.network.chat.Component.translatable(
-            "message.dovemail.compose.broadcast_result", onlineCount + offlineCount, onlineCount, offlineCount
-        ));
+    // 改为使用 UI 提示，便于在写信界面内联显示并触发客户端自动返回收件箱
+    sendUiAlert(sender, "message.dovemail.compose.broadcast_result",
+        Integer.toString(onlineCount + offlineCount),
+        Integer.toString(onlineCount),
+        Integer.toString(offlineCount));
     }
 
     private static java.util.function.Supplier<top.atdove.dovemail.mail.Mail> createMailSupplierForBroadcast(
