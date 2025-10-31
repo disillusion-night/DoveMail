@@ -60,7 +60,8 @@ public class MailboxScreen extends Screen {
     int pageSlotsInit = getPageSize();
     int marginInit = LIST_TOP_PADDING - panelTop;
     int listHeightInit = pageSlotsInit * CARD_HEIGHT + Math.max(0, pageSlotsInit - 1) * CARD_SPACING;
-    int panelBottom = LIST_TOP_PADDING + listHeightInit + marginInit;
+    int infoBarHeightInit = this.font.lineHeight + 6; // reserve one line height for info bar
+    int panelBottom = LIST_TOP_PADDING + listHeightInit + infoBarHeightInit + marginInit;
 
     // 左右翻页箭头：位于收件箱面板左右两侧内部，垂直居中
     int arrowSize = 16;
@@ -128,7 +129,7 @@ public class MailboxScreen extends Screen {
         renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-    // 顶部标题与背景面板（高度根据每页展示数量动态渲染）
+    // 顶部标题与背景面板（高度根据每页展示数量动态渲染，预留一行用于提示）
     int centerX = this.width / 2;
     int panelLeft = centerX - CARD_WIDTH / 2 - 10;
     int panelRight = centerX + CARD_WIDTH / 2 + 10;
@@ -136,7 +137,8 @@ public class MailboxScreen extends Screen {
     int pageSlotsRender = getPageSize();
     int marginRender = LIST_TOP_PADDING - panelTop;
     int listHeightRender = pageSlotsRender * CARD_HEIGHT + Math.max(0, pageSlotsRender - 1) * CARD_SPACING;
-    int panelBottom = LIST_TOP_PADDING + listHeightRender + marginRender;
+    int infoBarHeight = this.font.lineHeight + 6;
+    int panelBottom = LIST_TOP_PADDING + listHeightRender + infoBarHeight + marginRender;
         // 背景面板（半透明）
         guiGraphics.fill(panelLeft, panelTop, panelRight, panelBottom, 0x66000000);
         // 边框
@@ -162,13 +164,13 @@ public class MailboxScreen extends Screen {
         }
         renderPageIndicator(guiGraphics);
 
-        // bottom info message line above controls（基于动态面板底）
+        // 提示区域纳入面板内：在面板底部内部绘制
         if (infoMessage != null) {
-            int barHeight = 16;
-            int underY = panelBottom + 8;
-            int barTop = underY - barHeight - 4; // just above controls
-            guiGraphics.fill(panelLeft + 1, barTop, panelRight - 1, barTop + barHeight, 0x44000000);
-            guiGraphics.drawCenteredString(font, infoMessage, this.width / 2, barTop + 4, 0xFFFFFF);
+            int innerPad = 4;
+            int barTop = panelBottom - infoBarHeight + innerPad; // inside panel bottom with small padding
+            guiGraphics.fill(panelLeft + 1, barTop, panelRight - 1, barTop + infoBarHeight - innerPad * 2, 0x44000000);
+            int textY = barTop + (infoBarHeight - innerPad * 2 - this.font.lineHeight) / 2;
+            guiGraphics.drawCenteredString(font, infoMessage, this.width / 2, textY, 0xFFFFFF);
         }
     }
 
