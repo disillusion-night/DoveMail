@@ -30,11 +30,16 @@ public class Config {
         BUILDER.comment("Enable DoveMail test commands (server). Default: false")
             .define("enableTestCommands", false);
 
+    private static final ModConfigSpec.IntValue MAILS_PER_PAGE =
+        BUILDER.comment("How many mails to show per page in mailbox UI. Default: 3")
+            .defineInRange("mailsPerPage", 3, 1, 10);
+
     static final ModConfigSpec SPEC = BUILDER.build();
     // example items set removed
     private static boolean autoOpenMailboxOnLoginWhenUnread;
     private static boolean showUnreadToastOnLogin;
     private static boolean enableTestCommands;
+    private static int mailsPerPage;
 
     // no-op: validation helpers removed
 
@@ -44,6 +49,7 @@ public class Config {
         autoOpenMailboxOnLoginWhenUnread = AUTO_OPEN_MAILBOX_ON_LOGIN_WHEN_UNREAD.get();
         showUnreadToastOnLogin = SHOW_UNREAD_TOAST_ON_LOGIN.get();
         enableTestCommands = ENABLE_TEST_COMMANDS.get();
+    mailsPerPage = MAILS_PER_PAGE.get();
     }
 
     // Accessors
@@ -52,4 +58,5 @@ public class Config {
     public static boolean isAutoOpenMailboxOnLoginWhenUnread() { return autoOpenMailboxOnLoginWhenUnread; }
     public static boolean isShowUnreadToastOnLogin() { return showUnreadToastOnLogin; }
     public static boolean isEnableTestCommands() { return enableTestCommands; }
+    public static int getMailsPerPage() { return mailsPerPage; }
 }
