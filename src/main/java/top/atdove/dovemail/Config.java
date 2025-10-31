@@ -34,12 +34,17 @@ public class Config {
         BUILDER.comment("How many mails to show per page in mailbox UI. Default: 3")
             .defineInRange("mailsPerPage", 3, 1, 10);
 
+    private static final ModConfigSpec.IntValue COMPOSE_BODY_LINES =
+        BUILDER.comment("How many text lines to show in compose body area. Default: 6")
+            .defineInRange("composeBodyLines", 6, 3, 20);
+
     static final ModConfigSpec SPEC = BUILDER.build();
     // example items set removed
     private static boolean autoOpenMailboxOnLoginWhenUnread;
     private static boolean showUnreadToastOnLogin;
     private static boolean enableTestCommands;
     private static int mailsPerPage;
+    private static int composeBodyLines;
 
     // no-op: validation helpers removed
 
@@ -49,7 +54,8 @@ public class Config {
         autoOpenMailboxOnLoginWhenUnread = AUTO_OPEN_MAILBOX_ON_LOGIN_WHEN_UNREAD.get();
         showUnreadToastOnLogin = SHOW_UNREAD_TOAST_ON_LOGIN.get();
         enableTestCommands = ENABLE_TEST_COMMANDS.get();
-    mailsPerPage = MAILS_PER_PAGE.get();
+        mailsPerPage = MAILS_PER_PAGE.get();
+        composeBodyLines = COMPOSE_BODY_LINES.get();
     }
 
     // Accessors
@@ -59,4 +65,5 @@ public class Config {
     public static boolean isShowUnreadToastOnLogin() { return showUnreadToastOnLogin; }
     public static boolean isEnableTestCommands() { return enableTestCommands; }
     public static int getMailsPerPage() { return mailsPerPage; }
+    public static int getComposeBodyLines() { return composeBodyLines; }
 }

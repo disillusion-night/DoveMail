@@ -22,7 +22,7 @@ public class MailboxScreen extends Screen {
     private static final String SYSTEM_SENDER = "System";
     private static final int LIST_TOP_PADDING = 50;
     private static final int CARD_HEIGHT = 42;
-    private static final int CARD_WIDTH = 252; // 原 260：两侧各缩小 4px，总计缩小 8px
+    private static final int CARD_WIDTH = 246; // 原 260：两侧各缩小 4px，总计缩小 8px
     private static final int ICON_SIZE = 20;
     private static final int CARD_SPACING = 4;
     // 整体上移偏移量（像素），用于改善整体视觉均衡

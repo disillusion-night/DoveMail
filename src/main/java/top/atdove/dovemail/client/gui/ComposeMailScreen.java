@@ -31,10 +31,28 @@ public class ComposeMailScreen extends Screen {
 
     @Override
     protected void init() {
-        int centerX = this.width / 2;
-        int panelWidth = 300;
-        int panelLeft = centerX - panelWidth / 2;
-        int y = this.height / 2 - 70;
+        final int centerX = this.width / 2;
+        final int panelWidth = 300;
+        final int panelLeft = centerX - panelWidth / 2;
+        final int vShiftUp = 12; // 上移以保证视觉平衡
+
+        // 根据配置行数计算正文区域高度（行高 + 4px 内边距以匹配文本区域可见行数计算）
+        int lines = Math.max(1, top.atdove.dovemail.Config.getComposeBodyLines());
+        int lineAdvance = this.font.lineHeight; // bodyArea 将使用 lineSpacing(0)
+        int areaHeight = lines * lineAdvance + 4;
+
+        // 计算面板内布局：顶部留白（含标题）、两行输入区域高度、提示栏高度
+        int panelInnerTopMargin = 36; // 标题与输入之间的视觉缓冲
+        int twoRowsHeight = 26 + 26;  // 两行 EditBox（各 20 高 + 6 间距）
+        int infoBarHeight = this.font.lineHeight + 6; // 预留一行提示
+        int bottomPadding = 12;
+        int panelInnerHeight = panelInnerTopMargin + twoRowsHeight + areaHeight + infoBarHeight + bottomPadding;
+
+        int centerY = this.height / 2;
+        int panelTop = Math.max(12, centerY - panelInnerHeight / 2 - vShiftUp);
+        int panelBottom = panelTop + panelInnerHeight;
+
+        int y = panelTop + panelInnerTopMargin;
 
         toBox = new EditBox(this.font, panelLeft + 70, y, 210, 20,
                 Component.translatable("screen.dovemail.compose.to"));
@@ -48,26 +66,26 @@ public class ComposeMailScreen extends Screen {
         addRenderableWidget(subjectBox);
         y += 26;
 
-        int areaHeight = 80;
-        bodyArea = new MultiLineTextArea(panelLeft + 12, y, 268, areaHeight, this.font,
+    bodyArea = new MultiLineTextArea(panelLeft + 12, y, 268, areaHeight, this.font,
                 Component.translatable("screen.dovemail.compose.body"));
         // 使用紧凑行距，并通过软换行指示符提示折行位置
         bodyArea.setLineSpacing(0);
         addRenderableWidget(bodyArea);
 
-        y += areaHeight + 16;
-        var attach = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 30, y, 100, 20,
+    // 功能按钮放在面板下方，避免与面板重叠
+    int underY = panelBottom + 8;
+    var attach = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 30, underY, 100, 20,
                 Component.translatable("button.dovemail.add_attachments"), b -> {
                     // save current compose state then open attachments
                     top.atdove.dovemail.client.ComposeState.save(this.parent, toBox.getValue(), subjectBox.getValue(),
                             bodyArea.getValue(), sendAsSystem, sendAsAnnouncement);
                     top.atdove.dovemail.network.DovemailNetwork.openAttachments();
                 });
-        var send = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 140, y, 100, 20,
+    var send = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 140, underY, 100, 20,
                 Component.translatable("screen.dovemail.compose.send"), b -> doSend());
-        var cancel = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 250, y, 100, 20,
+    var cancel = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft + 250, underY, 100, 20,
                 Component.translatable("gui.cancel"), b -> onClose());
-        var settings = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft - 80, y, 70, 20,
+    var settings = new top.atdove.dovemail.client.gui.widgets.SimpleTextButton(panelLeft - 80, underY, 70, 20,
                 Component.translatable("button.dovemail.settings"), b -> openSettings());
         addRenderableWidget(attach);
         addRenderableWidget(send);
@@ -140,11 +158,22 @@ public class ComposeMailScreen extends Screen {
         renderBackground(g, mouseX, mouseY, partialTick);
         super.render(g, mouseX, mouseY, partialTick);
 
-        int centerX = this.width / 2;
-        int panelWidth = 300;
-        int panelLeft = centerX - panelWidth / 2;
-        int panelTop = this.height / 2 - 90;
-        int panelBottom = this.height / 2 + 110;
+        final int centerX = this.width / 2;
+        final int panelWidth = 300;
+        final int panelLeft = centerX - panelWidth / 2;
+        final int vShiftUp = 12;
+
+        int lines = Math.max(1, top.atdove.dovemail.Config.getComposeBodyLines());
+        int lineAdvance = this.font.lineHeight;
+        int areaHeight = lines * lineAdvance + 4;
+        int panelInnerTopMargin = 36;
+        int twoRowsHeight = 26 + 26;
+        int infoBarHeight = this.font.lineHeight + 6;
+        int bottomPadding = 12;
+        int panelInnerHeight = panelInnerTopMargin + twoRowsHeight + areaHeight + infoBarHeight + bottomPadding;
+        int centerY = this.height / 2;
+        int panelTop = Math.max(12, centerY - panelInnerHeight / 2 - vShiftUp);
+        int panelBottom = panelTop + panelInnerHeight;
         // 面板背景与边框
         g.fill(panelLeft, panelTop, panelLeft + panelWidth, panelBottom, 0xAA000000);
         g.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + 1, 0x33FFFFFF);
@@ -176,12 +205,13 @@ public class ComposeMailScreen extends Screen {
                     false);
         }
 
-        // bottom info message line inside panel
+        // 面板内的状态提示栏（占用预留高度区域）
         if (infoMessage != null) {
-            int barHeight = 16;
-            int barTop = panelBottom - barHeight - 2;
-            g.fill(panelLeft + 1, barTop, panelLeft + panelWidth - 1, barTop + barHeight, 0x44000000);
-            g.drawCenteredString(font, infoMessage, centerX, barTop + 4, 0xFFFFFF);
+            int innerPad = 4;
+            int barTop = panelBottom - infoBarHeight + innerPad;
+            g.fill(panelLeft + 1, barTop, panelLeft + panelWidth - 1, barTop + infoBarHeight - innerPad * 2, 0x44000000);
+            int textY = barTop + (infoBarHeight - innerPad * 2 - this.font.lineHeight) / 2;
+            g.drawCenteredString(font, infoMessage, centerX, textY, 0xFFFFFF);
         }
     }
 
